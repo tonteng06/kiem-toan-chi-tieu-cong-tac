@@ -2,79 +2,194 @@
   {
     "claim_id": "CLM-001",
     "employee": "Nguyen Van An",
-    "grade": "staff",
-    "city": "Ha Noi",
+    "city": "Hanoi",
     "country": "VN",
     "start_date": "2026-09-08",
     "end_date": "2026-09-11",
+    "submitted_date": "2026-09-14",
     "purpose": "Gap khach hang tai Ha Noi",
     "expenses": [
-      {"category": "hotel", "amount": 2700000, "expense_date": "2026-09-08", "description": "3 dem khach san", "has_receipt": true},
-      {"category": "meal", "amount": 900000, "expense_date": "2026-09-09", "description": "An uong 3 ngay", "has_receipt": true},
-      {"category": "transport", "amount": 450000, "expense_date": "2026-09-09", "description": "Taxi san bay", "has_receipt": true}
+      {
+        "category": "hotel",
+        "amount": 2700000,
+        "expense_date": "2026-09-08",
+        "description": "3 dem khach san",
+        "has_receipt": true
+      },
+      {
+        "category": "meal",
+        "amount": 900000,
+        "expense_date": "2026-09-09",
+        "description": "An uong 4 ngay",
+        "has_receipt": true
+      },
+      {
+        "category": "transport",
+        "amount": 450000,
+        "expense_date": "2026-09-09",
+        "description": "Taxi san bay",
+        "has_receipt": true
+      }
     ],
     "status": "SUBMITTED"
   },
   {
     "claim_id": "CLM-002",
     "employee": "Tran Thi Binh",
-    "grade": "staff",
     "city": "Da Nang",
     "country": "VN",
     "start_date": "2026-09-15",
     "end_date": "2026-09-17",
+    "submitted_date": "2026-09-20",
     "purpose": "Training noi bo",
     "expenses": [
-      {"category": "hotel", "amount": 9600000, "expense_date": "2026-09-15", "description": "2 dem resort 5 sao", "has_receipt": true},
-      {"category": "meal", "amount": 700000, "expense_date": "2026-09-16", "description": "An uong", "has_receipt": true}
+      {
+        "category": "hotel",
+        "amount": 9600000,
+        "expense_date": "2026-09-15",
+        "description": "2 dem resort 5 sao",
+        "has_receipt": true
+      },
+      {
+        "category": "meal",
+        "amount": 700000,
+        "expense_date": "2026-09-16",
+        "description": "An uong 3 ngay",
+        "has_receipt": true
+      }
     ],
     "status": "SUBMITTED"
   },
   {
     "claim_id": "CLM-003",
     "employee": "Le Minh Chau",
-    "grade": "manager",
     "city": "Can Tho",
     "country": "VN",
     "start_date": "2026-09-20",
     "end_date": "2026-09-22",
+    "submitted_date": "2026-09-24",
     "purpose": "Khao sat chi nhanh",
     "expenses": [
-      {"category": "hotel", "amount": 2400000, "expense_date": "2026-09-20", "description": "2 dem khach san", "has_receipt": false},
-      {"category": "meal", "amount": 600000, "expense_date": "2026-09-21", "description": "An uong", "has_receipt": true},
-      {"category": "transport", "amount": 800000, "expense_date": "2026-09-21", "description": "Xe di chuyen", "has_receipt": true}
+      {
+        "category": "hotel",
+        "amount": 2400000,
+        "expense_date": "2026-09-20",
+        "description": "2 dem khach san",
+        "has_receipt": false
+      },
+      {
+        "category": "meal",
+        "amount": 600000,
+        "expense_date": "2026-09-21",
+        "description": "An uong 3 ngay",
+        "has_receipt": true
+      },
+      {
+        "category": "transport",
+        "amount": 800000,
+        "expense_date": "2026-09-21",
+        "description": "Xe di chuyen",
+        "has_receipt": true
+      }
     ],
     "status": "SUBMITTED"
   },
   {
     "claim_id": "CLM-004",
     "employee": "Pham Quoc Dung",
-    "grade": "staff",
     "city": "Singapore",
     "country": "SG",
     "start_date": "2026-09-25",
     "end_date": "2026-09-28",
+    "submitted_date": "2026-10-01",
     "purpose": "Hoi nghi quoc te",
     "expenses": [
-      {"category": "hotel", "amount": 12000000, "expense_date": "2026-09-25", "description": "3 dem khach san", "has_receipt": true},
-      {"category": "meal", "amount": 3000000, "expense_date": "2026-09-26", "description": "An uong", "has_receipt": true}
+      {
+        "category": "hotel",
+        "amount": 12000000,
+        "expense_date": "2026-09-25",
+        "description": "3 dem khach san",
+        "has_receipt": true
+      },
+      {
+        "category": "meal",
+        "amount": 3000000,
+        "expense_date": "2026-09-26",
+        "description": "An uong 4 ngay",
+        "has_receipt": true
+      }
     ],
+    "prior_approval": true,
     "status": "SUBMITTED"
   },
   {
     "claim_id": "CLM-005",
     "employee": "Vo Thanh Ha",
-    "grade": "staff",
-    "city": "Ha Noi",
+    "city": "Hanoi",
     "country": "VN",
     "start_date": "2026-08-01",
     "end_date": "2026-08-03",
+    "submitted_date": "2026-08-05",
     "purpose": "Cong tac thang 8",
     "expenses": [
-      {"category": "hotel", "amount": 1800000, "expense_date": "2026-08-01", "description": "2 dem khach san", "has_receipt": true}
+      {
+        "category": "hotel",
+        "amount": 1800000,
+        "expense_date": "2026-08-01",
+        "description": "2 dem khach san",
+        "has_receipt": true
+      }
     ],
     "status": "APPROVED",
     "decision_reason": "Da duyet thang 8 (claim mau de test chan quyet dinh lai)",
     "updated_at": "2026-08-10T09:00:00+07:00"
+  },
+  {
+    "claim_id": "CLM-006",
+    "employee": "Do Quang Huy",
+    "city": "Ho Chi Minh City",
+    "country": "VN",
+    "start_date": "2026-09-02",
+    "end_date": "2026-09-02",
+    "submitted_date": "2026-09-04",
+    "purpose": "Tiep khach trong ngay",
+    "expenses": [
+      {
+        "category": "meal",
+        "amount": 450000,
+        "expense_date": "2026-09-02",
+        "description": "Ruou vang va bia (do uong co con) tiep khach",
+        "has_receipt": false
+      }
+    ],
+    "status": "SUBMITTED"
+  },
+  {
+    "claim_id": "CLM-007",
+    "employee": "Bui Thu Lan",
+    "city": "Ho Chi Minh City",
+    "country": "VN",
+    "start_date": "2026-09-28",
+    "end_date": "2026-09-30",
+    "submitted_date": "2026-10-12",
+    "purpose": "Hop doi tac",
+    "expenses": [
+      {
+        "category": "hotel",
+        "amount": 3000000,
+        "expense_date": "2026-09-28",
+        "description": "2 dem khach san",
+        "has_receipt": true
+      },
+      {
+        "category": "meal",
+        "amount": 900000,
+        "expense_date": "2026-09-29",
+        "description": "An uong 3 ngay",
+        "has_receipt": true
+      }
+    ],
+    "status": "SUBMITTED"
   }
 ]
+
