@@ -1,0 +1,3 @@
+mode,answerable_questions,hit_at_3,recall_at_3
+dense,11,1.0,1.0
+hybrid,11,1.0,0.9545454545454546

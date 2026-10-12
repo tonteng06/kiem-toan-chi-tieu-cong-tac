@@ -1,0 +1,31 @@
+id,mode,question,expected_doc_ids,retrieved_doc_ids,no_answer,hit_at_3,recall_at_3
+Q01,dense,"According to the current travel expense policy, how many calendar days does an employee have to submit an expense claim after a trip?",DOC002,DOC002;DOC001;DOC008,False,1,1.0
+Q02,dense,What is the hotel reimbursement limit per night in Da Nang?,DOC003,DOC003;DOC008;DOC004,False,1,1.0
+Q03,dense,What is the daily meal allowance for domestic business travel?,DOC004,DOC004;DOC008;DOC003,False,1,1.0
+Q04,dense,Are taxi and ride-hailing expenses reimbursable for approved business travel?,DOC005,DOC005;DOC001;DOC002,False,1,1.0
+Q05,dense,When is a receipt required for an individual expense?,DOC006,DOC006;DOC001;DOC002,False,1,1.0
+Q06,dense,What happens if an employee does not provide a required receipt?,DOC006,DOC006;DOC001;DOC007,False,1,1.0
+Q07,dense,What should happen when an expense exceeds an allowed policy limit?,DOC007,DOC007;DOC002;DOC008,False,1,1.0
+Q08,dense,Does international business travel require prior approval?,DOC008,DOC008;DOC002;DOC001,False,1,1.0
+Q09,dense,What is the reimbursement rate per kilometer when an employee uses a personal motorbike for business travel?,,DOC005;DOC001;DOC002,True,,
+Q10,dense,Which airline cabin class must employees book for domestic business trips?,,DOC008;DOC001;DOC004,True,,
+Q11,dense,How much can an employee claim for passport or visa renewal fees?,,DOC001;DOC002;DOC008,True,,
+Q12,dense,Does the company reimburse pet care expenses while an employee is travelling for work?,,DOC001;DOC002;DOC005,True,,
+Q13,dense,An employee stays one night in Da Nang for 1800000 VND. The hotel limit is exceeded. Which policies are relevant to decide what should happen?,DOC003;DOC007,DOC003;DOC008;DOC007,False,1,1.0
+Q14,dense,An employee takes a taxi for an approved business purpose costing 600000 VND but has no receipt. Which policies are relevant?,DOC005;DOC006,DOC005;DOC006;DOC001,False,1,1.0
+Q15,dense,An employee submits a travel expense claim 12 calendar days after the trip. Which versions of the travel expense policy are relevant for checking the submission deadline?,DOC001;DOC002,DOC002;DOC001;DOC008,False,1,1.0
+Q01,hybrid,"According to the current travel expense policy, how many calendar days does an employee have to submit an expense claim after a trip?",DOC002,DOC002;DOC001;DOC008,False,1,1.0
+Q02,hybrid,What is the hotel reimbursement limit per night in Da Nang?,DOC003,DOC003;DOC008;DOC004,False,1,1.0
+Q03,hybrid,What is the daily meal allowance for domestic business travel?,DOC004,DOC004;DOC008;DOC003,False,1,1.0
+Q04,hybrid,Are taxi and ride-hailing expenses reimbursable for approved business travel?,DOC005,DOC005;DOC001;DOC002,False,1,1.0
+Q05,hybrid,When is a receipt required for an individual expense?,DOC006,DOC006;DOC001;DOC005,False,1,1.0
+Q06,hybrid,What happens if an employee does not provide a required receipt?,DOC006,DOC006;DOC007;DOC001,False,1,1.0
+Q07,hybrid,What should happen when an expense exceeds an allowed policy limit?,DOC007,DOC007;DOC002;DOC008,False,1,1.0
+Q08,hybrid,Does international business travel require prior approval?,DOC008,DOC008;DOC002;DOC001,False,1,1.0
+Q09,hybrid,What is the reimbursement rate per kilometer when an employee uses a personal motorbike for business travel?,,DOC003;DOC005;DOC004,True,,
+Q10,hybrid,Which airline cabin class must employees book for domestic business trips?,,DOC001;DOC003;DOC002,True,,
+Q11,hybrid,How much can an employee claim for passport or visa renewal fees?,,DOC002;DOC008;DOC007,True,,
+Q12,hybrid,Does the company reimburse pet care expenses while an employee is travelling for work?,,DOC001;DOC005;DOC004,True,,
+Q13,hybrid,An employee stays one night in Da Nang for 1800000 VND. The hotel limit is exceeded. Which policies are relevant to decide what should happen?,DOC003;DOC007,DOC003;DOC008;DOC004,False,1,0.5
+Q14,hybrid,An employee takes a taxi for an approved business purpose costing 600000 VND but has no receipt. Which policies are relevant?,DOC005;DOC006,DOC005;DOC006;DOC002,False,1,1.0
+Q15,hybrid,An employee submits a travel expense claim 12 calendar days after the trip. Which versions of the travel expense policy are relevant for checking the submission deadline?,DOC001;DOC002,DOC002;DOC001;DOC007,False,1,1.0
