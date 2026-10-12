@@ -1,0 +1,15 @@
+doc_id: DOC007
+title: Expense Exception Policy
+version: 1.0
+date: 2026-02-01
+owner: Finance
+
+An expense that exceeds a policy limit may still be reviewed as an exception.
+
+The employee must provide a reason for the exception request.
+
+An over-limit expense must not be automatically approved.
+
+The expense must be escalated to a manager for review.
+
+After reviewing the evidence, the manager may approve or reject the exception.
