@@ -1,0 +1,15 @@
+{"id":"Q01","question":"According to the current travel expense policy, how many calendar days does an employee have to submit an expense claim after a trip?","expected_doc_ids":["DOC002"],"no_answer":false}
+{"id":"Q02","question":"What is the hotel reimbursement limit per night in Da Nang?","expected_doc_ids":["DOC003"],"no_answer":false}
+{"id":"Q03","question":"What is the daily meal allowance for domestic business travel?","expected_doc_ids":["DOC004"],"no_answer":false}
+{"id":"Q04","question":"Are taxi and ride-hailing expenses reimbursable for approved business travel?","expected_doc_ids":["DOC005"],"no_answer":false}
+{"id":"Q05","question":"When is a receipt required for an individual expense?","expected_doc_ids":["DOC006"],"no_answer":false}
+{"id":"Q06","question":"What happens if an employee does not provide a required receipt?","expected_doc_ids":["DOC006"],"no_answer":false}
+{"id":"Q07","question":"What should happen when an expense exceeds an allowed policy limit?","expected_doc_ids":["DOC007"],"no_answer":false}
+{"id":"Q08","question":"Does international business travel require prior approval?","expected_doc_ids":["DOC008"],"no_answer":false}
+{"id":"Q09","question":"What is the reimbursement rate per kilometer when an employee uses a personal motorbike for business travel?","expected_doc_ids":[],"no_answer":true}
+{"id":"Q10","question":"Which airline cabin class must employees book for domestic business trips?","expected_doc_ids":[],"no_answer":true}
+{"id":"Q11","question":"How much can an employee claim for passport or visa renewal fees?","expected_doc_ids":[],"no_answer":true}
+{"id":"Q12","question":"Does the company reimburse pet care expenses while an employee is travelling for work?","expected_doc_ids":[],"no_answer":true}
+{"id":"Q13","question":"An employee stays one night in Da Nang for 1800000 VND. The hotel limit is exceeded. Which policies are relevant to decide what should happen?","expected_doc_ids":["DOC003","DOC007"],"no_answer":false}
+{"id":"Q14","question":"An employee takes a taxi for an approved business purpose costing 600000 VND but has no receipt. Which policies are relevant?","expected_doc_ids":["DOC005","DOC006"],"no_answer":false}
+{"id":"Q15","question":"An employee submits a travel expense claim 12 calendar days after the trip. Which versions of the travel expense policy are relevant for checking the submission deadline?","expected_doc_ids":["DOC001","DOC002"],"no_answer":false}

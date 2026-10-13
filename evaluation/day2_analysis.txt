@@ -1,0 +1,192 @@
+DAY 2 - RETRIEVAL REASONING ANALYSIS
+=====================================
+
+Purpose
+-------
+
+The goal of Day 2 is to analyze retrieval behavior in more difficult
+multi-policy and policy-version cases.
+
+The analysis focuses on Q13, Q14, and Q15 from the retrieval testset.
+
+The baseline Hybrid configuration is kept unchanged:
+
+Hybrid score = 0.3 * normalized BM25 score + 0.7 * Dense score
+
+This configuration is based on the Week 4 hybrid-search implementation.
+No weights were changed only to improve the evaluation result.
+
+
+Q13 - Hotel Limit and Exception Policy
+--------------------------------------
+
+Expected documents:
+
+- DOC003 - Hotel Reimbursement Limits
+- DOC007 - Expense Exception Policy
+
+Dense ranking:
+
+1. DOC003
+2. DOC008
+3. DOC007
+4. DOC004
+
+Hybrid ranking:
+
+1. DOC003
+2. DOC008
+3. DOC004
+4. DOC007
+
+Result:
+
+Dense retrieves both expected documents inside Top 3.
+
+Hybrid retrieves DOC003 but DOC007 falls to rank 4.
+
+The important score comparison is:
+
+DOC007:
+- Dense score: 0.4167
+- BM25 normalized score: 0.2241
+- Hybrid score: 0.3589
+
+DOC004:
+- Dense score: 0.4023
+- BM25 normalized score: 0.2643
+- Hybrid score: 0.3609
+
+Dense considers DOC007 more semantically relevant than DOC004.
+
+However, DOC004 receives a higher BM25 score. After combining the two
+components, DOC004 receives a slightly higher Hybrid score:
+
+DOC004 Hybrid = 0.3609
+DOC007 Hybrid = 0.3589
+
+The difference is only 0.0020, but it is enough to move DOC007 from
+rank 3 to rank 4.
+
+This is retained as a real retrieval failure case instead of changing
+the weights only to make the metric higher.
+
+
+Q14 - Taxi Expense with Missing Receipt
+---------------------------------------
+
+Expected documents:
+
+- DOC005 - Ground Transportation Policy
+- DOC006 - Receipt Requirements
+
+Dense ranking:
+
+1. DOC005
+2. DOC006
+
+Hybrid ranking:
+
+1. DOC005
+2. DOC006
+
+Result:
+
+Both Dense and Hybrid successfully retrieve both expected policies
+inside Top 2.
+
+DOC005 receives strong semantic and lexical scores because the query
+contains information about taxi transportation and approved business
+purpose.
+
+DOC006 receives a strong semantic score because the query also includes
+a 600000 VND expense with no receipt.
+
+This case demonstrates successful multi-policy retrieval.
+
+
+Q15 - Policy Version Conflict
+-----------------------------
+
+Expected documents:
+
+- DOC001 - Travel Expense Policy version 1.0
+- DOC002 - Travel Expense Policy version 2.0
+
+Dense ranking:
+
+1. DOC002 version 2.0
+2. DOC001 version 1.0
+
+Hybrid ranking:
+
+1. DOC002 version 2.0
+2. DOC001 version 1.0
+
+Result:
+
+Both retrieval modes successfully retrieve the two relevant policy
+versions inside Top 2.
+
+The metadata is preserved during retrieval:
+
+DOC001:
+- Version: 1.0
+- Date: 2025-01-01
+
+DOC002:
+- Version: 2.0
+- Date: 2026-01-01
+
+DOC002 ranks above DOC001 in both Dense and Hybrid retrieval.
+
+The Retriever is responsible for returning relevant evidence and
+preserving metadata such as version and date.
+
+The Retriever itself does not make the final business decision about
+which policy version is currently applicable.
+
+That decision belongs to the Agent or reasoning layer, which can inspect
+the retrieved evidence and policy metadata.
+
+
+Overall Findings
+----------------
+
+Q13:
+- Dense: successful
+- Hybrid: partial failure
+- Main issue: lexical BM25 contribution changes the ranking between
+  DOC004 and DOC007.
+
+Q14:
+- Dense: successful
+- Hybrid: successful
+- Demonstrates successful multi-policy retrieval.
+
+Q15:
+- Dense: successful
+- Hybrid: successful
+- Demonstrates successful version-aware retrieval.
+
+The Day 2 analysis shows that Hybrid retrieval is not automatically
+better than Dense retrieval for every query.
+
+Dense retrieval can perform better when semantic meaning is more
+important than exact lexical overlap.
+
+Hybrid retrieval remains useful because it combines semantic similarity
+with lexical matching, but its ranking depends on the weighting between
+the two components.
+
+
+Artifacts
+---------
+
+Detailed scores and rankings are stored in:
+
+evaluation/day2_reasoning_cases.csv
+
+The script used to reproduce the analysis is:
+
+evaluation/day2_reasoning_analysis.py

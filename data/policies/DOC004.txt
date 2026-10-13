@@ -1,0 +1,13 @@
+doc_id: DOC004
+title: Meal Allowance Policy
+version: 1.0
+date: 2026-02-01
+owner: Finance
+
+The domestic meal allowance is limited to 500,000 VND per employee per day.
+
+The international meal allowance is limited to 1,000,000 VND per employee per day.
+
+Alcoholic beverages are not reimbursable.
+
+Meal expenses above the applicable daily allowance require manager review.

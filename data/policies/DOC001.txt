@@ -1,0 +1,13 @@
+doc_id: DOC001
+title: Travel Expense Policy
+version: 1.0
+date: 2025-01-01
+owner: Finance
+
+Employees must submit travel expense claims within 15 calendar days after returning from a business trip.
+
+Hotel, meal, and transportation expenses may be reimbursed when they are related to approved business travel.
+
+Receipts should be provided where required by company policy.
+
+Claims with missing required receipts may be rejected or sent for further review.
