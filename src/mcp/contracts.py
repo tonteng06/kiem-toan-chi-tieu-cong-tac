@@ -26,6 +26,10 @@ class SearchResultItem(TypedDict):
     content: str
     score: float
     mode: str
+    date: str
+    owner: str
+    dense_score: float | None
+    bm25_score: float | None
 
 
 class SearchDocumentsOutput(TypedDict):

@@ -1,10 +1,8 @@
 # MCP tool contracts draft
 
-Status: day-one draft for group review. The server/client skeleton exists; the
-tool handlers and claim state side effect are scheduled for later integration.
-The skeleton targets the official MCP Python SDK 2.x API. `requirements.txt`
-contains the union of this dependency and the RAG dependencies listed on the
-member 1 branch so the team can use one shared installation file after merging.
+Status: `search_documents` and `get_claim_status` are implemented on the
+`member3-mcp` integration branch. `submit_decision` remains scheduled for the
+planned action checkpoint. The server/client use the MCP Python SDK 2.x API.
 
 ## Shared conventions
 
@@ -31,9 +29,9 @@ Input:
 | `top_k` | integer | no | Defaults to `3`; must be positive |
 
 Output: `{"results": [...]}`. Each result includes `chunk_id`, `doc_id`,
-`title`, `version`, `content`, `score`, and `mode`. The current RAG model nests
-the metadata under `SearchResult.chunk`; the MCP adapter should flatten it only
-at serialization time without dropping provenance.
+`title`, `version`, `date`, `owner`, `content`, `score`, `mode`, `dense_score`,
+and `bm25_score`. The MCP adapter flattens `SearchResult.chunk` at
+serialization time, preserving the source metadata and retrieval scores.
 
 ## `get_claim_status`
 
@@ -84,4 +82,12 @@ again and compare the actual status with the expected status.
   Confirm whether those belong in the MCP server or remain internal Agent/
   business-logic functions; the day-one plan only requires the three tools
   above.
+
+## Runtime notes
+
+- Run the server with `python -m src.mcp.server`; stdio is reserved for MCP
+  protocol messages, and application logging is configured for stderr.
+- The retriever is initialized lazily from `data/policies/` on the first search.
+- Claim reads use `StateStore` and return an explicit MCP tool error for an
+  unknown claim.
 

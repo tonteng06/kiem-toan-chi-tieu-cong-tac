@@ -222,6 +222,7 @@ __marimo__/
 # Travel Expense Agent local files
 .env
 .venv/
+.vendor/
 __pycache__/
 *.pyc
 .DS_Store
