@@ -122,6 +122,33 @@ Hybrid:
 
 Tôi hiểu rằng metric này chưa phải LLM faithfulness. Faithfulness, correct refusal và token usage chỉ có thể được đánh giá đầy đủ khi Agent end-to-end có output và usage information.
 
+## Các prompt chính và phần code được AI hỗ trợ trực tiếp
+
+Một số prompt chính tôi đã sử dụng trong quá trình làm phần của mình:
+
+- "Hướng dẫn tôi làm phần Data + RAG + Evaluation từng bước."
+- "Giải thích Dense Search, BM25 và Hybrid Search để tôi có thể hiểu và bảo vệ."
+- "Giải thích cách tính Hit@3 và Recall@3."
+- "Phân tích vì sao Hybrid Search không lấy được DOC007 trong Q13."
+- "Giúp tôi kiểm tra trường hợp multi-policy và policy version ở Q14, Q15."
+- "Hỗ trợ xây dựng claim-to-policy grounding evaluation và phân biệt nó với LLM faithfulness."
+
+Các phần có đoạn code được ChatGPT gợi ý hoặc tạo bản nháp trực tiếp gồm:
+
+- `src/models/document.py`
+- `src/rag/loader.py`
+- `src/rag/chunker.py`
+- `src/rag/embeddings.py`
+- `src/rag/dense_search.py`
+- `src/rag/bm25_search.py`
+- `src/rag/hybrid_search.py`
+- `src/rag/retriever.py`
+- `evaluation/evaluate_retrieval.py`
+- `evaluation/day2_reasoning_analysis.py`
+- `evaluation/evaluate_claim_grounding.py`
+
+Tôi không xem các đoạn code AI tạo ra là kết quả cuối cùng ngay lập tức. Tôi đã trực tiếp chạy code, kiểm tra output, đối chiếu với policy corpus và chỉnh lại khi cần trước khi đưa vào project.
+
 ## Những gì tôi đã tự kiểm tra
 
 Tôi đã trực tiếp chạy code trên máy và kiểm tra các phần sau:
@@ -135,7 +162,7 @@ Tôi đã trực tiếp chạy code trên máy và kiểm tra các phần sau:
 - Chạy Hybrid Search.
 - Kiểm tra Retriever với hai mode Dense và Hybrid.
 - Chạy bộ test 15 câu.
-- Kiểm tra 4 câu no-answer.
+- Xác nhận testset có 4 câu no-answer và quan sát Retriever vẫn trả về các document gần nhất. Tôi chưa đánh giá correct refusal ở Agent layer vì Agent end-to-end chưa có output.
 - Chạy evaluation Dense và Hybrid.
 - Phân tích Q13, Q14 và các trường hợp multi-policy.
 

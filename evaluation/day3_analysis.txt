@@ -138,6 +138,9 @@ These metrics require the end-to-end Agent output and usage interface from the A
 
 The business rules also mirror several policy values as deterministic constants. This is useful for calculation and testing, but the final Agent must still use retrieved policy evidence for grounding.
 
+The business-rule issue messages may already contain policy-specific terms or values, such as a city name, reimbursement limit, or receipt requirement. Therefore, Claim-to-policy Grounding@3 measures integration compatibility between the business-rule layer and the Retriever; it should not be interpreted as an independent end-to-end grounding or reasoning metric.
+
+
 Ground Transportation Policy coverage is not yet complete in calculate_claim. Receipt requirements are checked, but all transportation-specific policy rules are not represented in the current deterministic business rules.
 
 8. Artifacts

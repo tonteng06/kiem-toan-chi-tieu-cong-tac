@@ -24,14 +24,35 @@ def load_testset(path: Path) -> list[dict]:
     return items
 
 
-def unique_doc_ids(results) -> list[str]:
-    doc_ids = []
+def top_unique_doc_ids(
+    retriever: Retriever,
+    query: str,
+    mode: str,
+    top_k: int,
+) -> list[str]:
+    """
+    Return the Top-K unique policy documents.
+
+    Retriever ranks chunks, but this evaluation is document-level.
+    Therefore all chunks are ranked first, then duplicate document IDs
+    are removed until Top-K unique documents are collected.
+    """
+    results = retriever.retrieve(
+        query=query,
+        mode=mode,
+        top_k=len(retriever.chunks),
+    )
+
+    doc_ids: list[str] = []
 
     for result in results:
         doc_id = result.chunk.doc_id
 
         if doc_id not in doc_ids:
             doc_ids.append(doc_id)
+
+        if len(doc_ids) == top_k:
+            break
 
     return doc_ids
 
@@ -54,13 +75,12 @@ def evaluate() -> None:
         print(f"\n===== {mode.upper()} =====")
 
         for item in testset:
-            results = retriever.retrieve(
+            retrieved_doc_ids = top_unique_doc_ids(
+                retriever=retriever,
                 query=item["question"],
                 mode=mode,
                 top_k=TOP_K,
             )
-
-            retrieved_doc_ids = unique_doc_ids(results)
             expected_doc_ids = item["expected_doc_ids"]
             no_answer = item["no_answer"]
 
