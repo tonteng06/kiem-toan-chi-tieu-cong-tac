@@ -79,6 +79,49 @@ DOC004 có Hybrid score nhỉnh hơn DOC007 một chút nên chiếm vị trí T
 
 Đối với Q15, tôi kiểm tra trường hợp có nhiều version của policy, cụ thể là DOC001 version 1.0 và DOC002 version 2.0. Kết quả cho thấy cả Dense và Hybrid đều retrieve được hai document này ở Top 2, trong đó DOC002 version 2.0 đứng trước DOC001 version 1.0. Qua trường hợp này tôi hiểu rằng Retriever có nhiệm vụ lấy evidence và giữ metadata về version, còn việc quyết định version nào đang có hiệu lực sẽ thuộc phần reasoning của Agent.
 
+
+Các file ở Day 2 có sử dụng gợi ý hoặc code được hỗ trợ bởi ChatGPT gồm:
+
+- `evaluation/day2_reasoning_analysis.py`
+- `evaluation/day2_reasoning_cases.csv`
+- `evaluation/day2_analysis.txt`
+
+Trong đó, ChatGPT hỗ trợ tôi xây dựng script để kiểm tra Dense score, BM25 raw score, BM25 normalized score, Hybrid score và thứ hạng của document. Tôi đã trực tiếp chạy script, kiểm tra kết quả và đối chiếu lại với kết quả retrieval trước đó.
+
+
+## Day 3
+
+Ở Day 3, tôi tích hợp phần RAG của Member 1 với Claim, Business Rules và StateStore của Member 2 để kiểm tra khả năng grounding giữa quyết định nghiệp vụ và policy evidence.
+
+ChatGPT hỗ trợ tôi:
+
+- Kiểm tra các commit của Member 2 trước khi tích hợp.
+- Giải thích `Claim`, `Expense`, `ClaimStatus` và state transition.
+- Giải thích cách hoạt động của `StateStore`.
+- Giải thích và kiểm tra `calculate_claim`.
+- Hỗ trợ chạy regression test để bảo đảm phần RAG Day 1 và Day 2 không bị thay đổi.
+- Hỗ trợ xây dựng claim-to-policy grounding evaluation.
+- Phân biệt Claim-to-policy Grounding@3 với LLM faithfulness.
+
+Các file Day 3 có sử dụng gợi ý hoặc code được hỗ trợ bởi ChatGPT gồm:
+
+- `evaluation/evaluate_claim_grounding.py`
+- `evaluation/claim_grounding_results.csv`
+- `evaluation/claim_grounding_summary.csv`
+- `evaluation/day3_analysis.txt`
+
+Trong Day 3, tôi không viết lại Agent của Member 2. Tôi sử dụng output từ `calculate_claim()` làm business-rule evidence và kiểm tra xem Retriever của phần tôi có retrieve lại đúng policy document và version hay không.
+
+Kết quả hiện tại:
+
+Dense:
+- Claim-to-policy Grounding@3: 100% (5/5 issues)
+
+Hybrid:
+- Claim-to-policy Grounding@3: 100% (5/5 issues)
+
+Tôi hiểu rằng metric này chưa phải LLM faithfulness. Faithfulness, correct refusal và token usage chỉ có thể được đánh giá đầy đủ khi Agent end-to-end có output và usage information.
+
 ## Những gì tôi đã tự kiểm tra
 
 Tôi đã trực tiếp chạy code trên máy và kiểm tra các phần sau:
