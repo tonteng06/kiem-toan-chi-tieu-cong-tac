@@ -115,3 +115,15 @@ Tôi cũng giữ lại Q13 là một trường hợp retrieval chưa tốt của
 Tôi có sử dụng AI để hỗ trợ trong quá trình làm project, chủ yếu để học, giải thích code, gợi ý cách triển khai và hỗ trợ debug.
 
 Tôi đã chạy và kiểm tra lại các phần code được AI hỗ trợ, đồng thời học lại lý thuyết liên quan để có thể giải thích và sửa code trực tiếp trong buổi bảo vệ.
+
+## 2026-10-14 preflight fixes (AI-assisted)
+
+At the user's request, Codex reviewed and edited the claim model, deterministic
+business rules, synthetic fixtures, regression tests and related documentation.
+The fixes cover strict boolean/amount validation, daily and nightly allocations,
+transportation purpose/upgrade approval checks, and invalid or empty claims.
+
+Codex ran 32 standard-library regression tests successfully. The full pytest
+suite, MCP stdio transport and real embedding model were not verified in this
+restricted environment. These are automated checks, not a claim that the student
+has already reviewed or manually verified the new implementation.

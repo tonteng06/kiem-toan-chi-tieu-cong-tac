@@ -6,6 +6,9 @@ planned action checkpoint. The server/client use the MCP Python SDK 2.x API.
 
 ## Shared conventions
 
+- Claim inputs and persisted expense fields follow `docs/claim_format.md`.
+  Multi-day costs require explicit allocations; boolean strings are invalid.
+
 - Use JSON-compatible input and output values with type hints and the `TypedDict`
   definitions in `src/mcp/contracts.py`.
 - Return tool failures as clear errors; do not silently return empty evidence or
