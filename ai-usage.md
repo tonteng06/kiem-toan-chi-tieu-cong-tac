@@ -127,3 +127,18 @@ Codex ran 32 standard-library regression tests successfully. The full pytest
 suite, MCP stdio transport and real embedding model were not verified in this
 restricted environment. These are automated checks, not a claim that the student
 has already reviewed or manually verified the new implementation.
+
+
+## TV3 merge preparation review (14 October task, reviewed 15 October)
+
+Codex helped compare the current implementation with the supplied TV3 merge
+guide, finish package/tool-name replacements, align decisions with ClaimStatus,
+normalize Error: responses, update regression tests, and correct progress notes.
+
+Verification performed by Codex in the project environment: 75 pytest tests and
+71 subtests passed; real subprocess smoke_stdio completed with stdio OK; the
+existing search smoke passed with deterministic embeddings. A real-embedding
+demo timed out after 45 seconds, so no success or new retrieval metric is claimed
+for it. The TV1 Day 1 progress file was compared with its remote-branch version.
+These are automated checks; the student still needs to understand the changes
+and rerun the merge checkpoint after TV1 is in main.
