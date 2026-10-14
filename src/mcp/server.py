@@ -12,6 +12,7 @@ from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from src.agent.state_store import StateStore, StateStoreError
+from src.mcp.evidence import serialize_search_result
 
 if TYPE_CHECKING:
     from src.models.document import SearchResult
@@ -42,24 +43,7 @@ def _get_retriever() -> Retriever:
 
 
 def _serialize_search_result(result: SearchResult) -> dict[str, object]:
-    chunk = result.chunk
-    return {
-        "chunk_id": chunk.chunk_id,
-        "doc_id": chunk.doc_id,
-        "title": chunk.title,
-        "version": chunk.version,
-        "date": chunk.date,
-        "owner": chunk.owner,
-        "content": chunk.content,
-        "score": float(result.score),
-        "mode": result.mode,
-        "dense_score": (
-            float(result.dense_score) if result.dense_score is not None else None
-        ),
-        "bm25_score": (
-            float(result.bm25_score) if result.bm25_score is not None else None
-        ),
-    }
+    return serialize_search_result(result)
 
 
 @server.tool()
@@ -77,12 +61,13 @@ def search_documents(
     try:
         # Keep this boundary aligned with the shared member 1 Retriever contract.
         results = _get_retriever().retrieve(query, mode=mode, top_k=top_k)
+        payload = {"results": [_serialize_search_result(item) for item in results]}
     except ToolError:
         raise
     except Exception as exc:
         logger.exception("Policy retrieval failed")
         raise ToolError(f"Policy retrieval failed: {exc}") from exc
-    return {"results": [_serialize_search_result(item) for item in results]}
+    return payload
 
 
 @server.tool()

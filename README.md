@@ -10,7 +10,10 @@ and MCP tools for travel expense auditing.
   international approval and transportation requirements.
 - State store: allowed transitions, atomic file replacement and read-back.
 - MCP: `search_documents` and `get_claim_status` are implemented.
-- `submit_decision`, the full Agent loop and end-to-end verification are pending.
+- Read-only integration: MCP evidence feeds the existing deterministic claim
+  reasoner, retaining document/version/chunk citations and checking source coverage.
+- `submit_decision` (15 October), the full Agent loop and end-to-end verification
+  are pending.
 
 ## Setup on Windows (PowerShell)
 
@@ -70,9 +73,39 @@ See `docs/claim_format.md` before adding inputs or integrating Agent tools.
 allocations are fixture data; the runtime never invents an equal split for a real
 invoice. Sample totals and expected recommendations remain unchanged.
 
+## Member 3 checkpoint for 14 October
+
+The default example is one hotel night in Da Nang for 1,800,000 VND against the
+1,500,000 VND limit. Expected evidence-backed decision: `ESCALATE`, including
+DOC003 (hotel limit) and DOC007 (exception review), plus receipt/deadline checks.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\demo_readonly_audit.py
+.\.venv\Scripts\python.exe scripts\demo_readonly_audit.py --transport inprocess
+.\.venv\Scripts\python.exe scripts\demo_readonly_audit.py --claim-id CLM-002
+```
+
+Both transports use real embeddings; neither silently substitutes vectors. The
+stdio mode starts the server process from the repository root. The output
+contains search arguments/results, complete evidence, reasoning and the final
+decision. The demo verifies that the sample claim file is unchanged. Required
+policy evidence that cannot be retrieved yields `NO_ANSWER`, not an unsupported
+approval. Read `docs/tool_contracts.md` for the Agent handoff and limitations.
+
+Focused tests (SDK tests require installed runtime dependencies):
+
+```powershell
+python -m unittest discover -s tests -p test_mcp_evidence.py -v
+.\.venv\Scripts\python.exe -m unittest discover -s tests -p test_mcp_sdk.py -v
+```
+
 ## Verification checkpoint
 
 The 14 October preflight passed 32 standard-library regression tests. The full
 pytest suite, MCP stdio round-trip and real embedding load remain unverified in
 the restricted work environment. See `progress/2026-10-14-preflight.md` for the
 exact scope and limitations.
+
+For the Member 3 integration checkpoint and current transport/model verification
+status, see `progress/2026-10-14.md`. A passing fake-client unit test is not a
+passing live MCP round-trip.

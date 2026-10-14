@@ -6,7 +6,7 @@ from typing import Literal, NotRequired, TypedDict
 
 
 RetrievalMode = Literal["dense", "hybrid"]
-AgentDecision = Literal["APPROVE", "REJECT", "ESCALATE", "NO_ANSWER"]
+AgentDecision = Literal["APPROVE", "REJECT", "ESCALATE", "NO_ANSWER", "NEED_MORE_INFO"]
 PersistableDecision = Literal[
     "APPROVE", "REJECT", "ESCALATE", "NEED_MORE_INFO"
 ]
@@ -34,6 +34,35 @@ class SearchResultItem(TypedDict):
 
 class SearchDocumentsOutput(TypedDict):
     results: list[SearchResultItem]
+
+
+class EvidenceCitation(TypedDict):
+    evidence_ref: str
+    doc_id: str
+    version: str
+    chunk_id: str
+    title: str
+
+
+class EvidenceSearch(TypedDict):
+    query: str
+    mode: str
+    top_k: int
+    results: list[SearchResultItem]
+
+
+class AuditPreviewOutput(TypedDict):
+    claim_id: str
+    question: str
+    decision: AgentDecision
+    reason: str
+    required_evidence_refs: list[str]
+    missing_evidence_refs: list[str]
+    evidence: list[SearchResultItem]
+    citations: list[EvidenceCitation]
+    searches: list[EvidenceSearch]
+    calculation: dict
+    read_only: bool
 
 
 class GetClaimStatusInput(TypedDict):
