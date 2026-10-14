@@ -24,8 +24,8 @@ sys.modules["sentence_transformers"] = types.SimpleNamespace(
 )
 
 import src.rag.retriever as retriever_module
-import src.mcp.server as mcp_server
-from src.mcp.client import call_tool, discover_tools
+import src.mcp_server.server as mcp_server
+from src.mcp_server.client import call_tool, discover_tools
 
 
 class DeterministicEmbeddingModel:
@@ -54,12 +54,12 @@ async def main() -> None:
     async with Client(mcp_server.server) as client:
         tools = await discover_tools(client)
         names = [tool.name for tool in tools]
-        if not {"search_documents", "get_claim_status"} <= set(names):
+        if not {"search_policy", "get_claim_status"} <= set(names):
             raise AssertionError(f"Unexpected tools/list result: {names}")
 
         search = await call_tool(
             client,
-            "search_documents",
+            "search_policy",
             {"query": "Da Nang hotel limit", "mode": "hybrid", "top_k": 3},
         )
         if search.is_error:

@@ -9,7 +9,7 @@ and MCP tools for travel expense auditing.
 - Business rules: daily/nightly limits, receipts, alcohol, submission deadline,
   international approval and transportation requirements.
 - State store: allowed transitions, atomic file replacement and read-back.
-- MCP: `search_documents` and `get_claim_status` are implemented.
+- MCP: `search_policy` and `get_claim_status` are implemented.
 - Read-only integration: MCP evidence feeds the existing deterministic claim
   reasoner, retaining document/version/chunk citations and checking source coverage.
 - `submit_decision` (15 October), the full Agent loop and end-to-end verification
@@ -50,7 +50,7 @@ The state-persistence test operates on a temporary copy of the sample claims.
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\smoke_mcp_tools.py
-.\.venv\Scripts\python.exe -m src.mcp.server
+.\.venv\Scripts\python.exe -m src.mcp_server.server
 ```
 
 The smoke uses an in-process MCP client and deterministic embedding vectors. It
@@ -76,7 +76,7 @@ invoice. Sample totals and expected recommendations remain unchanged.
 ## Member 3 checkpoint for 14 October
 
 The default example is one hotel night in Da Nang for 1,800,000 VND against the
-1,500,000 VND limit. Expected evidence-backed decision: `ESCALATE`, including
+1,500,000 VND limit. Expected evidence-backed decision: `ESCALATED`, including
 DOC003 (hotel limit) and DOC007 (exception review), plus receipt/deadline checks.
 
 ```powershell
@@ -101,11 +101,11 @@ python -m unittest discover -s tests -p test_mcp_evidence.py -v
 
 ## Verification checkpoint
 
-The 14 October preflight passed 32 standard-library regression tests. The full
-pytest suite, MCP stdio round-trip and real embedding load remain unverified in
-the restricted work environment. See `progress/2026-10-14-preflight.md` for the
-exact scope and limitations.
+The merge-preparation review passed 75 pytest tests and 71 subtests using the
+project Python 3.12 environment. `scripts/smoke_stdio.py` completed with `stdio OK`:
+real subprocess discovery, CLM-001 read and CLM-999 error. The existing in-process
+search smoke passed with deterministic embeddings and retained source metadata.
 
-For the Member 3 integration checkpoint and current transport/model verification
-status, see `progress/2026-10-14.md`. A passing fake-client unit test is not a
-passing live MCP round-trip.
+The real-embedding demo timed out after 45 seconds in this review, so its full
+retrieval/reasoning result is not claimed as verified. See
+`progress/2026-10-14-tv3.md` for exact commands, limitations and merge readiness.

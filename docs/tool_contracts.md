@@ -1,9 +1,9 @@
 # MCP tool contracts and read-only Agent handoff
 
-Status: `search_documents` and `get_claim_status` are implemented on the
+Status: `search_policy` and `get_claim_status` are implemented on the
 `member3-mcp` integration branch. The 14 October read-only bridge connects these
 responses to the existing deterministic reasoner. `submit_decision` is scheduled
-for 15 October. The server/client use the MCP Python SDK 2.x API.
+for Day 5, after the Day 4 registry adapter. The server/client use the MCP Python SDK 2.x API.
 
 ## Shared conventions
 
@@ -11,16 +11,16 @@ for 15 October. The server/client use the MCP Python SDK 2.x API.
   Multi-day costs require explicit allocations; boolean strings are invalid.
 
 - Use JSON-compatible input and output values with type hints and the `TypedDict`
-  definitions in `src/mcp/contracts.py`.
-- Return tool failures as clear errors; do not silently return empty evidence or
+  definitions in `src/mcp_server/contracts.py`.
+- Return tool failures as errors whose message starts with `Error:`; do not silently return empty evidence or
   a successful-looking result when a dependency fails.
-- `search_documents` preserves provenance from `SearchResult.chunk`: `doc_id`,
+- `search_policy` preserves provenance from `SearchResult.chunk`: `doc_id`,
   `title`, `version`, and `chunk_id` must travel with the content.
 - MCP stdio is the server's protocol channel. Diagnostics belong on stderr,
   never stdout.
 - The client calls `tools/list` at runtime and calls tools by discovered name.
 
-## `search_documents`
+## `search_policy`
 
 Purpose: retrieve evidence relevant to a query.
 
@@ -48,26 +48,26 @@ must return an explicit tool error.
 
 ## Read-only Agent integration (14 October)
 
-`src/mcp/evidence.py` owns serialization and validation at both ends of the
+`src/mcp_server/evidence.py` owns serialization and validation at both ends of the
 boundary. It preserves all `SearchResultItem` fields, validates finite scores,
 and rejects missing provenance or conflicting data. Empty retrieval is allowed;
 it is never interpreted as sufficient evidence for a decision.
 
-`src/mcp/client.py:search_payload` accepts SDK 2.x structured content or exactly
+`src/mcp_server/client.py:search_payload` accepts SDK 2.x structured content or exactly
 one JSON text block. Tool errors, malformed JSON and invalid metadata raise a
 clear `ValueError`; they do not silently become an empty success response.
 
 Member 2 can call:
 
 ```python
-from src.mcp.agent_bridge import preview_audit_via_mcp
+from src.mcp_server.agent_bridge import preview_audit_via_mcp
 
 preview = await preview_audit_via_mcp(
     client, claim, user_question, mode="hybrid", top_k=3
 )
 ```
 
-The bridge calls the discovered `search_documents` tool and uses the existing
+The bridge calls the discovered `search_policy` tool and uses the existing
 `calculate_claim` function. It does not implement or replace the future LLM loop.
 `user_question` is a retrieval hint for auditing the structured `claim`, not an
 arbitrary general-knowledge question. Do not use this facade as a general QA API.
@@ -115,33 +115,33 @@ between an agent outcome and a persisted claim transition is:
 
 | Agent decision | Persisted claim status |
 | --- | --- |
-| `APPROVE` | `APPROVED` |
-| `REJECT` | `REJECTED` |
-| `ESCALATE` | `ESCALATED` |
+| `APPROVED` | `APPROVED` |
+| `REJECTED` | `REJECTED` |
+| `ESCALATED` | `ESCALATED` |
 | `NEED_MORE_INFO` | `NEED_MORE_INFO` (only when business logic explicitly chooses this transition) |
-| `NO_ANSWER` | No write; wait for more evidence or clarification |
+| `NO_ANSWER` | No claim write; only respond to the user |
 
 Output: `claim_id`, the accepted `decision`, resulting `status`, and
 `updated_at`. Reject writes for missing claims, invalid transitions, or
 unsupported decisions. After a successful write, the caller must read the claim
 again and compare the actual status with the expected status.
 
-## Decisions to confirm with the group
+## Agreed merge handoff
 
-- Confirm whether missing evidence should remain `NO_ANSWER` or become the
-  persisted `NEED_MORE_INFO` status. They are distinct in the current draft;
-  confirm whether the agent should explicitly map between them.
-- Confirm the exact shape of `evidence_refs` with the agent owner.
-- Confirm the state store format and concurrency expectations before
-  implementing `submit_decision`.
-- Member 2's branch notes `calculate_claim` and `get_claim` as proposed tools.
-  Confirm whether those belong in the MCP server or remain internal Agent/
-  business-logic functions; the day-one plan only requires the three tools
-  above.
+- Shared names: `search_policy`, `calculate_claim`, `get_claim_status`, `get_claim`,
+  `submit_decision`. The current MCP server exposes the two read tools;
+  the remaining registry adapters and write action are Day 4-5 work.
+- Persistable decisions are exactly `APPROVED`, `REJECTED`, `ESCALATED`,
+  `NEED_MORE_INFO`. `NO_ANSWER` is an Agent response and is never persisted.
+- Evidence references are strings such as `DOC003@v1.0`.
+- Server ToolError messages and client-normalized MCP errors start with `Error:`.
+  The client preserves `is_error=True` while normalizing SDK wrapper messages.
+- Confirm concurrency expectations with the state-store owner before write tools.
+- Merge order is TV2, TV1, then TV3. Preserve merge commits, never force push.
 
 ## Runtime notes
 
-- Run the server with `python -m src.mcp.server`; stdio is reserved for MCP
+- Run the server with `python -m src.mcp_server.server`; stdio is reserved for MCP
   protocol messages, and application logging is configured for stderr.
 - The retriever is initialized lazily from `data/policies/` on the first search.
 - Claim reads use `StateStore` and return an explicit MCP tool error for an

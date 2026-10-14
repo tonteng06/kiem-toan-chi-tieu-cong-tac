@@ -4,7 +4,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping
 
-from src.mcp.contracts import SearchDocumentsOutput, SearchResultItem
+from src.mcp_server.contracts import SearchPolicyOutput, SearchResultItem
 from src.models.document import SearchResult
 
 
@@ -16,10 +16,10 @@ def source_ref(item: SearchResultItem) -> str:
     return f"{item['doc_id']}@v{item['version'].removeprefix('v')}"
 
 
-def parse_search_payload(payload: object) -> SearchDocumentsOutput:
+def parse_search_payload(payload: object) -> SearchPolicyOutput:
     """Fail explicitly on malformed evidence; never silently drop provenance."""
     if not isinstance(payload, Mapping) or not isinstance(payload.get("results"), list):
-        raise ValueError("search_documents must return an object with a results list")
+        raise ValueError("search_policy must return an object with a results list")
     results = []
     identities = {}
     for item in payload["results"]:

@@ -5,8 +5,8 @@ import unittest
 from datetime import date
 from pathlib import Path
 
-from src.mcp.agent_bridge import preview_audit
-from src.mcp.evidence import parse_search_payload, serialize_search_result, source_ref
+from src.mcp_server.agent_bridge import preview_audit
+from src.mcp_server.evidence import parse_search_payload, serialize_search_result, source_ref
 from src.models.claim import Claim, Expense
 from src.models.document import Chunk, SearchResult
 from src.rag.chunker import chunk_documents
@@ -84,7 +84,7 @@ class AgentBridgeTests(unittest.TestCase):
         async def search(query, mode, top_k):
             return {"results": policy_records()}
         result = immediate(preview_audit(claim, "Audit hotel claim", search))
-        self.assertEqual(result["decision"], "ESCALATE")
+        self.assertEqual(result["decision"], "ESCALATED")
         self.assertFalse(result["missing_evidence_refs"])
         self.assertIn("DOC003@v1.0", result["required_evidence_refs"])
         self.assertIn("DOC007@v1.0", result["required_evidence_refs"])
@@ -100,7 +100,7 @@ class AgentBridgeTests(unittest.TestCase):
             calls.append((query, mode, top_k))
             return {"results": [r for r in records if r["doc_id"] != "DOC007"] if len(calls) == 1 else [r for r in records if r["doc_id"] == "DOC007"]}
         result = immediate(preview_audit(hotel_claim(), "Hotel limit", search))
-        self.assertEqual(result["decision"], "ESCALATE")
+        self.assertEqual(result["decision"], "ESCALATED")
         self.assertEqual(len(calls), 2)
         self.assertIn("Expense Exception Policy", calls[1][0])
         self.assertEqual(calls[0][1:], ("hybrid", 3))
@@ -133,7 +133,7 @@ class AgentBridgeTests(unittest.TestCase):
             immediate(preview_audit(hotel_claim(), "Hotel limit", search))
 
     def test_every_sample_maps_to_expected_agent_decision(self):
-        expected = ["APPROVE", "ESCALATE", "NEED_MORE_INFO", "ESCALATE", "APPROVE", "REJECT", "ESCALATE"]
+        expected = ["APPROVED", "ESCALATED", "NEED_MORE_INFO", "ESCALATED", "APPROVED", "REJECTED", "ESCALATED"]
         async def search(query, mode, top_k):
             return {"results": policy_records()}
         samples = json.loads((ROOT / "data/claims/claims.json").read_text(encoding="utf-8"))

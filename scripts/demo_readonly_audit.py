@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from src.agent.state_store import DEFAULT_PATH, StateStore
-from src.mcp.agent_bridge import preview_audit_via_mcp
-from src.mcp.client import connect
+from src.mcp_server.agent_bridge import preview_audit_via_mcp
+from src.mcp_server.client import connect
 from src.models.claim import Claim, Expense
 
 
@@ -32,13 +32,13 @@ async def run(args) -> dict:
     before = hashlib.sha256(DEFAULT_PATH.read_bytes()).hexdigest()
     if args.transport == "inprocess":
         from mcp import Client
-        from src.mcp.server import server
+        from src.mcp_server.server import server
 
         async with Client(server) as client:
             result = await preview_audit_via_mcp(client, claim, args.question, mode=args.mode, top_k=args.top_k)
     else:
         # An explicit cwd also makes the subprocess importable from outside repo root.
-        async with connect(sys.executable, ["-m", "src.mcp.server"], cwd=str(ROOT)) as client:
+        async with connect(sys.executable, ["-m", "src.mcp_server.server"], cwd=str(ROOT)) as client:
             result = await preview_audit_via_mcp(client, claim, args.question, mode=args.mode, top_k=args.top_k)
     if before != hashlib.sha256(DEFAULT_PATH.read_bytes()).hexdigest():
         raise RuntimeError("Read-only demo unexpectedly changed claim state")

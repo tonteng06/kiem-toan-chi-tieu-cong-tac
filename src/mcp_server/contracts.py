@@ -6,13 +6,13 @@ from typing import Literal, NotRequired, TypedDict
 
 
 RetrievalMode = Literal["dense", "hybrid"]
-AgentDecision = Literal["APPROVE", "REJECT", "ESCALATE", "NO_ANSWER", "NEED_MORE_INFO"]
+
 PersistableDecision = Literal[
-    "APPROVE", "REJECT", "ESCALATE", "NEED_MORE_INFO"
+    "APPROVED", "REJECTED", "ESCALATED", "NEED_MORE_INFO"
 ]
 
 
-class SearchDocumentsInput(TypedDict):
+class SearchPolicyInput(TypedDict):
     query: str
     mode: NotRequired[RetrievalMode]
     top_k: NotRequired[int]
@@ -32,7 +32,7 @@ class SearchResultItem(TypedDict):
     bm25_score: float | None
 
 
-class SearchDocumentsOutput(TypedDict):
+class SearchPolicyOutput(TypedDict):
     results: list[SearchResultItem]
 
 
@@ -54,7 +54,7 @@ class EvidenceSearch(TypedDict):
 class AuditPreviewOutput(TypedDict):
     claim_id: str
     question: str
-    decision: AgentDecision
+    decision: PersistableDecision | Literal["NO_ANSWER"]
     reason: str
     required_evidence_refs: list[str]
     missing_evidence_refs: list[str]

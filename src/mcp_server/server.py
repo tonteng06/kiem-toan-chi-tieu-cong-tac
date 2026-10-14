@@ -12,7 +12,7 @@ from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from src.agent.state_store import StateStore, StateStoreError
-from src.mcp.evidence import serialize_search_result
+from src.mcp_server.evidence import serialize_search_result
 
 if TYPE_CHECKING:
     from src.models.document import SearchResult
@@ -38,7 +38,7 @@ def _get_retriever() -> Retriever:
 
     documents = load_documents(POLICY_DIR)
     if not documents:
-        raise ToolError(f"No policy documents found in {POLICY_DIR}")
+        raise ToolError(f"Error: No policy documents found in {POLICY_DIR}")
     return Retriever(chunk_documents(documents))
 
 
@@ -47,16 +47,16 @@ def _serialize_search_result(result: SearchResult) -> dict[str, object]:
 
 
 @server.tool()
-def search_documents(
+def search_policy(
     query: str,
     mode: Literal["dense", "hybrid"] = "hybrid",
     top_k: int = 3,
 ) -> dict[str, list[dict[str, object]]]:
     """Search policy documents and return ranked chunks with source provenance."""
     if not query.strip():
-        raise ToolError("query must not be empty")
+        raise ToolError("Error: query must not be empty")
     if top_k < 1:
-        raise ToolError("top_k must be a positive integer")
+        raise ToolError("Error: top_k must be a positive integer")
 
     try:
         # Keep this boundary aligned with the shared member 1 Retriever contract.
@@ -66,7 +66,7 @@ def search_documents(
         raise
     except Exception as exc:
         logger.exception("Policy retrieval failed")
-        raise ToolError(f"Policy retrieval failed: {exc}") from exc
+        raise ToolError(f"Error: Policy retrieval failed: {exc}") from exc
     return payload
 
 
@@ -74,14 +74,14 @@ def search_documents(
 def get_claim_status(claim_id: str) -> dict[str, str]:
     """Read a claim's persisted status and decision metadata."""
     if not claim_id.strip():
-        raise ToolError("claim_id must not be empty")
+        raise ToolError("Error: claim_id must not be empty")
     try:
         claim = StateStore().get(claim_id)
     except StateStoreError as exc:
-        raise ToolError(str(exc)) from exc
+        raise ToolError(f"Error: {exc}") from exc
     except Exception as exc:
         logger.exception("Claim status read failed for %s", claim_id)
-        raise ToolError(f"Unable to read claim status: {exc}") from exc
+        raise ToolError(f"Error: Unable to read claim status: {exc}") from exc
 
     return {
         "claim_id": claim.claim_id,

@@ -7,25 +7,25 @@ from contextlib import asynccontextmanager
 import json
 
 from mcp import Client, StdioServerParameters
-from mcp.types import CallToolResult, Tool
+from mcp.types import CallToolResult, TextContent, Tool
 
-from src.mcp.contracts import SearchDocumentsOutput
-from src.mcp.evidence import parse_search_payload
+from src.mcp_server.contracts import SearchPolicyOutput
+from src.mcp_server.evidence import parse_search_payload
 
 
-def search_payload(response: CallToolResult) -> SearchDocumentsOutput:
+def search_payload(response: CallToolResult) -> SearchPolicyOutput:
     """Unpack SDK 2.x structured content, or its JSON text representation."""
     if response.is_error:
-        raise ValueError(f"search_documents failed: {response.content}")
+        raise ValueError(f"Error: search_policy failed: {response.content}")
     if response.structured_content is not None:
         return parse_search_payload(response.structured_content)
     texts = [block.text for block in response.content if getattr(block, "type", None) == "text"]
     if len(texts) != 1:
-        raise ValueError("search_documents returned no unambiguous structured/JSON response")
+        raise ValueError("Error: search_policy returned no unambiguous structured/JSON response")
     try:
         payload = json.loads(texts[0])
     except json.JSONDecodeError as exc:
-        raise ValueError("search_documents returned malformed JSON") from exc
+        raise ValueError("Error: search_policy returned malformed JSON") from exc
     return parse_search_payload(payload)
 
 
@@ -57,6 +57,14 @@ async def call_tool(
     available = await discover_tools(client)
     if not any(tool.name == tool_name for tool in available):
         names = ", ".join(tool.name for tool in available) or "(none)"
-        raise ValueError(f"Unknown MCP tool {tool_name!r}; available tools: {names}")
-    return await client.call_tool(tool_name, arguments)
+        raise ValueError(f"Error: Unknown MCP tool {tool_name!r}; available tools: {names}")
+    response = await client.call_tool(tool_name, arguments)
+    if response.is_error:
+        message = "\n".join(
+            block.text for block in response.content if getattr(block, "type", None) == "text"
+        ) or f"Tool {tool_name} failed"
+        if not message.startswith("Error:"):
+            message = "Error: " + message
+        return response.model_copy(update={"content": [TextContent(type="text", text=message)]})
+    return response
 

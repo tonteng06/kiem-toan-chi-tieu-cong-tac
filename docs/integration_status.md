@@ -41,7 +41,7 @@ Problem:
   Agent/business-logic functions.
 
 Next:
-- Implement `search_documents` and `get_claim_status` after the group confirms
+- Implement `search_policy` and `get_claim_status` after the group confirms
   the contracts; add `submit_decision` with real persistence and read-back
   verification at the planned checkpoint.
 

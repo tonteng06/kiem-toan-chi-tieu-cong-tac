@@ -8,13 +8,13 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 
 from src.agent.business_rules import calculate_claim
-from src.mcp.contracts import AuditPreviewOutput, SearchResultItem
-from src.mcp.evidence import parse_search_payload, source_ref
+from src.mcp_server.contracts import AuditPreviewOutput, SearchResultItem
+from src.mcp_server.evidence import parse_search_payload, source_ref
 from src.models.claim import Claim
 
 
 SearchTool = Callable[[str, str, int], Awaitable[object]]
-DECISIONS = {"APPROVED": "APPROVE", "REJECTED": "REJECT", "ESCALATED": "ESCALATE",
+DECISIONS = {"APPROVED": "APPROVED", "REJECTED": "REJECTED", "ESCALATED": "ESCALATED",
              "NEED_MORE_INFO": "NEED_MORE_INFO"}
 POLICY_QUERIES = {
     "DOC002@v2.0": "Travel Expense Policy version 2.0 submit within 10 calendar days",
@@ -120,11 +120,11 @@ async def preview_audit(
 
 
 async def preview_audit_via_mcp(client, claim: Claim, question: str, **options) -> AuditPreviewOutput:
-    """Use dynamic tools/list discovery and the agreed search_documents tool."""
-    from src.mcp.client import call_tool, search_payload
+    """Use dynamic tools/list discovery and the agreed search_policy tool."""
+    from src.mcp_server.client import call_tool, search_payload
 
     async def search(query: str, mode: str, top_k: int) -> object:
-        response = await call_tool(client, "search_documents", {"query": query, "mode": mode, "top_k": top_k})
+        response = await call_tool(client, "search_policy", {"query": query, "mode": mode, "top_k": top_k})
         return search_payload(response)
 
     return await preview_audit(claim, question, search, **options)
