@@ -332,3 +332,10 @@ Run claim-to-policy grounding evaluation:
 Latest completed Day 4 checkpoint before this cleanup:
 
 `cbe9c65 - Translate evaluation analyses to Vietnamese`
+
+## Why chunk size 500 and overlap 100
+
+- Each policy file is a short, self-contained document (278-517 characters), so a 500-character chunk keeps almost every document whole. The corpus gives 9 chunks in total; only DOC008 is split into 2.
+- The embedding model (`all-MiniLM-L6-v2`) truncates input at about 256 tokens, so 500 characters is safely inside its limit.
+- An overlap of 100 characters helps preserve context around chunk boundaries if documents become longer later.
+- Limitation: fixed-size character chunking can still split a sentence or word. If the corpus grows, section-based or heading-based chunking would be a better approach.
