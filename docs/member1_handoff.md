@@ -16,7 +16,11 @@ Member 1 is responsible for:
 - retrieval testset;
 - retrieval evaluation;
 - retrieval failure analysis;
-- claim-to-policy grounding evaluation.
+- claim-to-policy grounding evaluation;
+- Agent evaluation output contract;
+- per-case Agent evaluation metrics;
+- aggregate Agent evaluation metrics;
+- token-usage evaluation infrastructure.
 
 Member 1 does not own the final LLM Agent orchestration or MCP write-tool implementation.
 
@@ -172,17 +176,77 @@ Artifacts:
 - `evaluation/claim_grounding_summary.csv`
 - `evaluation/day3_analysis.txt`
 
+## Agent Evaluation Infrastructure
+
+Day 4 prepares Member 1's evaluation layer for the final end-to-end Agent.
+
+Files:
+
+- `evaluation/agent_eval_contract.py`
+- `evaluation/agent_metrics.py`
+- `evaluation/agent_eval_summary.py`
+- `evaluation/day4_analysis.txt`
+
+The minimum Agent evaluation output contains:
+
+- `answer`
+- `decision`
+- `evidence_refs`
+- `usage.calls`
+- `usage.prompt_tokens`
+- `usage.completion_tokens`
+- `usage.max_prompt`
+
+Valid decisions currently include:
+
+- `APPROVED`
+- `REJECTED`
+- `ESCALATED`
+- `NEED_MORE_INFO`
+- `NO_ANSWER`
+
+Per-case metrics:
+
+- Decision Correctness
+- Correct Refusal
+- Evidence Coverage
+
+Aggregate metrics:
+
+- Decision Accuracy
+- Correct Refusal Rate
+- Average Evidence Coverage
+- Total LLM Calls
+- Prompt Tokens
+- Completion Tokens
+- Total Tokens
+- Average Tokens per Case
+- Maximum Prompt Size
+
+`NO_ANSWER` means policy evidence is insufficient.
+
+`NEED_MORE_INFO` means the relevant policy exists but required claim information is missing.
+
+Evidence Coverage is not the same as LLM Faithfulness.
+
+Synthetic Agent outputs are used only in unit tests to verify evaluation logic.
+They are not reported as final Agent performance.
+
 ## Tests
 
 Current integrated test result:
 
-`19 passed`
+`69 passed`
 
 Relevant tests:
 
 - `tests/test_claim.py`
 - `tests/test_state_store.py`
 - `tests/test_business_rules.py`
+- `tests/test_dispatcher.py`
+- `tests/test_agent_eval_contract.py`
+- `tests/test_agent_metrics.py`
+- `tests/test_agent_eval_summary.py`
 
 ## AI Usage
 
@@ -222,8 +286,10 @@ For end-to-end evaluation, Member 1 needs the Agent to expose at least:
 
 With these outputs, Member 1 can evaluate:
 
+- Decision Accuracy;
+- Correct Refusal Rate;
+- Agent Evidence Coverage;
 - answer faithfulness;
-- correct refusal rate;
 - token usage per question;
 - token cost per question.
 
@@ -263,6 +329,6 @@ Run claim-to-policy grounding evaluation:
 
 ## Important Git Checkpoint
 
-Current Member 1 cleanup checkpoint:
+Latest completed Day 4 checkpoint before this cleanup:
 
-`14c9dad - Polish Member 1 evaluation and documentation`
+`cbe9c65 - Translate evaluation analyses to Vietnamese`

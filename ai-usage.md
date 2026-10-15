@@ -180,6 +180,71 @@ Hybrid:
 
 Tôi cũng giữ lại Q13 là một trường hợp retrieval chưa tốt của Hybrid để phân tích, thay vì chỉnh kết quả chỉ để metric đẹp hơn.
 
+## Day 4
+
+Ở Day 4, tôi tiếp tục sử dụng ChatGPT để hỗ trợ xây dựng phần Agent Evaluation Infrastructure.
+
+ChatGPT hỗ trợ tôi:
+
+- Kiểm tra và giải thích phần ToolRegistry và Dispatcher được tích hợp từ Member 2.
+- Giải thích cách ToolRegistry giới hạn các tool mà Agent được phép gọi.
+- Giải thích cách Dispatcher validate tool name, arguments và xử lý lỗi thành `Error:` observation thay vì làm Agent loop bị crash.
+- Hỗ trợ thiết kế Agent evaluation output contract.
+- Hỗ trợ xây dựng validation cho các field:
+  - `answer`
+  - `decision`
+  - `evidence_refs`
+  - `usage.calls`
+  - `usage.prompt_tokens`
+  - `usage.completion_tokens`
+  - `usage.max_prompt`
+- Hỗ trợ phân biệt `NO_ANSWER` và `NEED_MORE_INFO`.
+- Hỗ trợ xây dựng các per-case metrics:
+  - Decision Correctness
+  - Correct Refusal
+  - Evidence Coverage
+- Hỗ trợ xây dựng aggregate metrics:
+  - Decision Accuracy
+  - Correct Refusal Rate
+  - Average Evidence Coverage
+  - Total LLM Calls
+  - Prompt Tokens
+  - Completion Tokens
+  - Total Tokens
+  - Average Tokens per Case
+  - Maximum Prompt Size
+- Hỗ trợ viết unit tests cho Agent evaluation contract, per-case metrics và aggregate metrics.
+- Giải thích sự khác nhau giữa Evidence Coverage và Faithfulness.
+- Hỗ trợ viết tài liệu phân tích Day 4 bằng tiếng Việt.
+
+Các file Day 4 có sử dụng gợi ý hoặc code được ChatGPT hỗ trợ gồm:
+
+- `evaluation/agent_eval_contract.py`
+- `evaluation/agent_metrics.py`
+- `evaluation/agent_eval_summary.py`
+- `tests/test_agent_eval_contract.py`
+- `tests/test_agent_metrics.py`
+- `tests/test_agent_eval_summary.py`
+- `evaluation/day4_analysis.txt`
+
+Trong Day 4, các Agent output được sử dụng trong unit tests là synthetic outputs.
+
+Các synthetic outputs này chỉ được dùng để kiểm tra correctness của evaluation logic và metric formulas.
+
+Tôi không sử dụng các synthetic outputs này để công bố final Agent performance.
+
+Hiện tại các metric như Decision Accuracy, Correct Refusal Rate, Agent Evidence Coverage, Faithfulness và real token usage chỉ có thể được tính chính xác sau khi Agent end-to-end cung cấp real output và usage information.
+
+Một số prompt chính tôi đã sử dụng với ChatGPT trong Day 4 gồm:
+
+- "Giải thích ToolRegistry và Dispatcher để tôi có thể bảo vệ."
+- "Giúp tôi thiết kế Agent evaluation output contract."
+- "Giải thích sự khác nhau giữa NO_ANSWER và NEED_MORE_INFO."
+- "Giúp tôi xây dựng Decision Correctness, Correct Refusal và Evidence Coverage."
+- "Giúp tôi tổng hợp Decision Accuracy, Correct Refusal Rate và token usage."
+- "Giải thích vì sao Evidence Coverage không phải Faithfulness."
+- "Hỗ trợ viết unit tests cho Agent evaluation metrics."
+
 ## Cam kết
 
 Tôi có sử dụng AI để hỗ trợ trong quá trình làm project, chủ yếu để học, giải thích code, gợi ý cách triển khai và hỗ trợ debug.
