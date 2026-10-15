@@ -1,24 +1,24 @@
-DAY 2 - RETRIEVAL REASONING ANALYSIS
-=====================================
+DAY 2 - PHÂN TÍCH CÁCH RETRIEVER XẾP HẠNG
+===============================================
 
-Purpose
--------
+Mục đích
+--------
 
-The goal of Day 2 is to analyze retrieval behavior in more difficult
-multi-policy and policy-version cases.
+Mục tiêu của Day 2 là phân tích sâu hành vi retrieval ở các trường hợp khó hơn,
+đặc biệt là câu hỏi cần nhiều policy và câu hỏi có nhiều version của policy.
 
-The analysis focuses on Q13, Q14, and Q15 from the retrieval testset.
+Phân tích tập trung vào Q13, Q14 và Q15 trong retrieval testset.
 
-The baseline Hybrid configuration is kept unchanged:
+Cấu hình Hybrid baseline được giữ nguyên:
 
 Hybrid score = 0.3 * normalized BM25 score + 0.7 * Dense score
 
-This configuration is based on the Week 4 hybrid-search implementation.
-No weights were changed only to improve the evaluation result.
+Cấu hình này dựa trên cách kết hợp score trong bài Hybrid Search ở Week 4.
+Không thay đổi weight chỉ để làm cho metric đẹp hơn.
 
 
-Q13 - Hotel Limit and Exception Policy
---------------------------------------
+Q13 - Hotel Limit và Exception Policy
+-------------------------------------
 
 Expected documents:
 
@@ -39,13 +39,13 @@ Hybrid ranking:
 3. DOC004
 4. DOC007
 
-Result:
+Kết quả:
 
-Dense retrieves both expected documents inside Top 3.
+Dense retrieve được cả hai expected documents trong Top 3.
 
-Hybrid retrieves DOC003 but DOC007 falls to rank 4.
+Hybrid retrieve được DOC003, nhưng DOC007 rơi xuống rank 4.
 
-The important score comparison is:
+So sánh score quan trọng:
 
 DOC007:
 - Dense score: 0.4167
@@ -57,23 +57,22 @@ DOC004:
 - BM25 normalized score: 0.2643
 - Hybrid score: 0.3609
 
-Dense considers DOC007 more semantically relevant than DOC004.
+Dense đánh giá DOC007 phù hợp về ngữ nghĩa hơn DOC004.
 
-However, DOC004 receives a higher BM25 score. After combining the two
-components, DOC004 receives a slightly higher Hybrid score:
+Tuy nhiên DOC004 có BM25 score cao hơn. Sau khi kết hợp hai thành phần,
+DOC004 có Hybrid score cao hơn DOC007 một chút:
 
 DOC004 Hybrid = 0.3609
 DOC007 Hybrid = 0.3589
 
-The difference is only 0.0020, but it is enough to move DOC007 from
-rank 3 to rank 4.
+Chênh lệch chỉ là 0.0020, nhưng đủ để đẩy DOC007 từ rank 3 xuống rank 4.
 
-This is retained as a real retrieval failure case instead of changing
-the weights only to make the metric higher.
+Trường hợp này được giữ lại như một retrieval failure thật, thay vì thay đổi
+weight chỉ để tăng metric.
 
 
-Q14 - Taxi Expense with Missing Receipt
----------------------------------------
+Q14 - Taxi Expense bị thiếu Receipt
+-----------------------------------
 
 Expected documents:
 
@@ -90,23 +89,21 @@ Hybrid ranking:
 1. DOC005
 2. DOC006
 
-Result:
+Kết quả:
 
-Both Dense and Hybrid successfully retrieve both expected policies
-inside Top 2.
+Cả Dense và Hybrid đều retrieve thành công hai policy cần thiết trong Top 2.
 
-DOC005 receives strong semantic and lexical scores because the query
-contains information about taxi transportation and approved business
-purpose.
+DOC005 có semantic score và lexical score tốt vì query chứa thông tin về taxi
+và approved business purpose.
 
-DOC006 receives a strong semantic score because the query also includes
-a 600000 VND expense with no receipt.
+DOC006 cũng có semantic score tốt vì query có expense 600000 VND nhưng không có
+receipt.
 
-This case demonstrates successful multi-policy retrieval.
+Case này cho thấy multi-policy retrieval hoạt động tốt.
 
 
-Q15 - Policy Version Conflict
------------------------------
+Q15 - Xung đột version của policy
+---------------------------------
 
 Expected documents:
 
@@ -123,12 +120,11 @@ Hybrid ranking:
 1. DOC002 version 2.0
 2. DOC001 version 1.0
 
-Result:
+Kết quả:
 
-Both retrieval modes successfully retrieve the two relevant policy
-versions inside Top 2.
+Cả hai retrieval mode đều retrieve được hai version liên quan trong Top 2.
 
-The metadata is preserved during retrieval:
+Metadata được giữ lại trong quá trình retrieval:
 
 DOC001:
 - Version: 1.0
@@ -138,55 +134,51 @@ DOC002:
 - Version: 2.0
 - Date: 2026-01-01
 
-DOC002 ranks above DOC001 in both Dense and Hybrid retrieval.
+DOC002 đứng trên DOC001 ở cả Dense và Hybrid.
 
-The Retriever is responsible for returning relevant evidence and
-preserving metadata such as version and date.
+Retriever có trách nhiệm trả về evidence liên quan và giữ metadata như version
+và date.
 
-The Retriever itself does not make the final business decision about
-which policy version is currently applicable.
+Retriever không tự quyết định version nào đang có hiệu lực.
 
-That decision belongs to the Agent or reasoning layer, which can inspect
-the retrieved evidence and policy metadata.
+Quyết định version nào áp dụng thuộc về Agent hoặc reasoning layer, nơi có thể
+đọc retrieved evidence và metadata của policy.
 
 
-Overall Findings
-----------------
+Kết luận chung
+--------------
 
 Q13:
-- Dense: successful
-- Hybrid: partial failure
-- Main issue: lexical BM25 contribution changes the ranking between
-  DOC004 and DOC007.
+- Dense: thành công
+- Hybrid: thất bại một phần
+- Nguyên nhân chính: thành phần lexical BM25 làm thay đổi thứ hạng giữa DOC004
+  và DOC007.
 
 Q14:
-- Dense: successful
-- Hybrid: successful
-- Demonstrates successful multi-policy retrieval.
+- Dense: thành công
+- Hybrid: thành công
+- Thể hiện multi-policy retrieval hoạt động đúng.
 
 Q15:
-- Dense: successful
-- Hybrid: successful
-- Demonstrates successful version-aware retrieval.
+- Dense: thành công
+- Hybrid: thành công
+- Thể hiện retrieval có giữ và sử dụng thông tin version.
 
-The Day 2 analysis shows that Hybrid retrieval is not automatically
-better than Dense retrieval for every query.
+Phân tích Day 2 cho thấy Hybrid retrieval không phải lúc nào cũng tốt hơn Dense.
 
-Dense retrieval can perform better when semantic meaning is more
-important than exact lexical overlap.
+Dense có thể tốt hơn khi ý nghĩa ngữ nghĩa quan trọng hơn lexical overlap chính xác.
 
-Hybrid retrieval remains useful because it combines semantic similarity
-with lexical matching, but its ranking depends on the weighting between
-the two components.
+Hybrid vẫn hữu ích vì kết hợp semantic similarity với lexical matching, nhưng
+ranking phụ thuộc vào weight giữa hai thành phần.
 
 
 Artifacts
 ---------
 
-Detailed scores and rankings are stored in:
+Detailed scores và rankings được lưu tại:
 
 evaluation/day2_reasoning_cases.csv
 
-The script used to reproduce the analysis is:
+Script dùng để tái tạo phân tích:
 
 evaluation/day2_reasoning_analysis.py
