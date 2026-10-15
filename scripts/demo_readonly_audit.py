@@ -12,8 +12,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.agent.state_store import DEFAULT_PATH, StateStore
-from src.mcp_server.agent_bridge import preview_audit_via_mcp
+from src.agent.state_store import DEFAULT_PATH
+from src.mcp_server.agent_bridge import preview_audit_via_mcp, preview_registered_claim_via_mcp
 from src.mcp_server.client import connect
 from src.models.claim import Claim, Expense
 
@@ -28,18 +28,25 @@ def example_claim() -> Claim:
 
 
 async def run(args) -> dict:
-    claim = StateStore().get(args.claim_id) if args.claim_id else example_claim()
+    claim = None if args.claim_id else example_claim()
     before = hashlib.sha256(DEFAULT_PATH.read_bytes()).hexdigest()
+
+    async def audit(client):
+        if args.claim_id:
+            return await preview_registered_claim_via_mcp(
+                client, args.claim_id, args.question, mode=args.mode, top_k=args.top_k
+            )
+        return await preview_audit_via_mcp(client, claim, args.question, mode=args.mode, top_k=args.top_k)
     if args.transport == "inprocess":
         from mcp import Client
         from src.mcp_server.server import server
 
         async with Client(server) as client:
-            result = await preview_audit_via_mcp(client, claim, args.question, mode=args.mode, top_k=args.top_k)
+            result = await audit(client)
     else:
         # An explicit cwd also makes the subprocess importable from outside repo root.
         async with connect(sys.executable, ["-m", "src.mcp_server.server"], cwd=str(ROOT)) as client:
-            result = await preview_audit_via_mcp(client, claim, args.question, mode=args.mode, top_k=args.top_k)
+            result = await audit(client)
     if before != hashlib.sha256(DEFAULT_PATH.read_bytes()).hexdigest():
         raise RuntimeError("Read-only demo unexpectedly changed claim state")
     return {"transport": args.transport, "embedding": "real", **result}

@@ -11,6 +11,7 @@ from mcp.types import CallToolResult, TextContent, Tool
 
 from src.mcp_server.contracts import SearchPolicyOutput
 from src.mcp_server.evidence import parse_search_payload
+from src.agent.dispatcher import parse_args
 
 
 def search_payload(response: CallToolResult) -> SearchPolicyOutput:
@@ -67,4 +68,36 @@ async def call_tool(
             message = "Error: " + message
         return response.model_copy(update={"content": [TextContent(type="text", text=message)]})
     return response
+
+
+async def dispatch_mcp(client: Client, name: object, raw_args: object = None) -> str:
+    """Async Agent adapter: JSON success or Error: observation, like TV2 dispatch.
+
+    Use `await` from the Agent loop; never nest asyncio.run inside a tool function.
+    Discovery/calls are made at runtime; ordinary failures become observations.
+    Cancellation still propagates, so a stopped run remains stopped.
+    """
+    try:
+        if not isinstance(name, str):
+            raise ValueError("tool name must be a string")
+        arguments = parse_args(raw_args)
+        response = await call_tool(client, name, arguments)
+        if response.is_error:
+            message = "\n".join(block.text for block in response.content if getattr(block, "type", None) == "text")
+            return message if message.startswith("Error:") else "Error: " + message
+        if name == "search_policy":
+            payload = search_payload(response)
+        elif response.structured_content is not None:
+            payload = response.structured_content
+        else:
+            texts = [block.text for block in response.content if getattr(block, "type", None) == "text"]
+            if len(texts) != 1:
+                raise ValueError("tool returned no unambiguous JSON result")
+            payload = json.loads(texts[0])
+        if not isinstance(payload, dict):
+            raise ValueError("tool result must be a JSON object")
+        return json.dumps(payload, ensure_ascii=False, allow_nan=False)
+    except Exception as exc:
+        message = str(exc)
+        return message if message.startswith("Error:") else f"Error: {message}"
 

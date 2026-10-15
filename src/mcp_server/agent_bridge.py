@@ -6,11 +6,12 @@ guides retrieval for an already structured claim; it is not a general QA API.
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+import json
 
 from src.agent.business_rules import calculate_claim
 from src.mcp_server.contracts import AuditPreviewOutput, SearchResultItem
 from src.mcp_server.evidence import parse_search_payload, source_ref
-from src.models.claim import Claim
+from src.models.claim import Claim, ClaimStatus
 
 
 SearchTool = Callable[[str, str, int], Awaitable[object]]
@@ -25,6 +26,33 @@ POLICY_QUERIES = {
     "DOC007@v1.0": "Expense Exception Policy exceeds limit escalate manager review",
     "DOC008@v1.0": "International Travel Policy prior approval destination hotel limits",
 }
+
+
+def _validated_calculation(claim: Claim, payload: object) -> dict:
+    """Reject corrupt or mismatched remote calculations before making a decision."""
+    if not isinstance(payload, dict) or payload.get("claim_id") != claim.claim_id:
+        raise ValueError("Error: calculation does not match the requested claim")
+    if not isinstance(payload.get("recommended_status"), str) or payload["recommended_status"] not in DECISIONS:
+        raise ValueError("Error: calculation has an invalid recommended_status")
+    if not isinstance(payload.get("summary"), str) or not payload["summary"].strip():
+        raise ValueError("Error: calculation requires a summary")
+    if type(payload.get("total")) is not int or payload["total"] != sum(claim.total_by_category().values()):
+        raise ValueError("Error: calculation total does not match the claim")
+    if payload.get("totals") != claim.total_by_category():
+        raise ValueError("Error: calculation category totals do not match the claim")
+    for key in ("violations", "missing_data"):
+        issues = payload.get(key)
+        if not isinstance(issues, list):
+            raise ValueError(f"Error: calculation requires a {key} list")
+        for issue in issues:
+            if not isinstance(issue, dict) or any(
+                not isinstance(issue.get(field), str) or not issue[field].strip()
+                for field in ("code", "message", "evidence", "outcome")
+            ):
+                raise ValueError("Error: calculation issue is missing provenance or reasoning")
+            if issue["outcome"] not in {status.value for status in ClaimStatus}:
+                raise ValueError("Error: calculation issue has an invalid outcome")
+    return payload
 
 
 def required_policy_refs(claim: Claim, calculation: dict) -> set[str]:
@@ -53,6 +81,7 @@ def required_policy_refs(claim: Claim, calculation: dict) -> set[str]:
 async def preview_audit(
     claim: Claim, question: str, search: SearchTool, *,
     mode: str = "hybrid", top_k: int = 3, max_searches: int = 6,
+    calculation_result: dict | None = None,
 ) -> AuditPreviewOutput:
     """Retrieve, preserve evidence, run the existing rules, and return no writes.
 
@@ -88,7 +117,9 @@ async def preview_audit(
                 evidence.append(item)
 
     await retrieve(question)
-    calculation = calculate_claim(claim)
+    calculation = _validated_calculation(
+        claim, calculate_claim(claim) if calculation_result is None else calculation_result
+    )
     required = required_policy_refs(claim, calculation)
     attempted = set()
     while len(searches) < max_searches:
@@ -128,3 +159,33 @@ async def preview_audit_via_mcp(client, claim: Claim, question: str, **options) 
         return search_payload(response)
 
     return await preview_audit(claim, question, search, **options)
+
+
+async def preview_registered_claim_via_mcp(
+    client, claim_id: str, question: str, **options,
+) -> AuditPreviewOutput:
+    """Day 4: get_claim + calculate_claim through MCP and TV2's real registry.
+
+    All claim data and business reasoning come from the server. The existing
+    evidence gate still controls the final read-only decision.
+    """
+    from src.mcp_server.client import dispatch_mcp
+
+    async def observe(name: str, args: dict) -> dict:
+        observation = await dispatch_mcp(client, name, args)
+        if observation.startswith("Error:"):
+            raise ValueError(observation)
+        return json.loads(observation)
+
+    raw_claim = await observe("get_claim", {"claim_id": claim_id})
+    if raw_claim.get("claim_id") != claim_id:
+        raise ValueError("Error: get_claim returned a different claim")
+    claim = Claim.from_dict(raw_claim)
+    calculation = _validated_calculation(
+        claim, await observe("calculate_claim", {"claim_id": claim_id})
+    )
+
+    async def search(query: str, mode: str, top_k: int) -> object:
+        return await observe("search_policy", {"query": query, "mode": mode, "top_k": top_k})
+
+    return await preview_audit(claim, question, search, calculation_result=calculation, **options)

@@ -9,10 +9,11 @@ and MCP tools for travel expense auditing.
 - Business rules: daily/nightly limits, receipts, alcohol, submission deadline,
   international approval and transportation requirements.
 - State store: allowed transitions, atomic file replacement and read-back.
-- MCP: `search_policy` and `get_claim_status` are implemented.
+- MCP: `search_policy`, `get_claim_status`, `get_claim`, `calculate_claim` are
+  implemented. Claim tools delegate to TV2's registry and dispatcher.
 - Read-only integration: MCP evidence feeds the existing deterministic claim
   reasoner, retaining document/version/chunk citations and checking source coverage.
-- `submit_decision` (15 October), the full Agent loop and end-to-end verification
+- `submit_decision` (Day 5), the full Agent loop and write/read-back verification
   are pending.
 
 ## Setup on Windows (PowerShell)
@@ -109,3 +110,21 @@ search smoke passed with deterministic embeddings and retained source metadata.
 The real-embedding demo timed out after 45 seconds in this review, so its full
 retrieval/reasoning result is not claimed as verified. See
 `progress/2026-10-14-tv3.md` for exact commands, limitations and merge readiness.
+
+## Day 4 registry integration
+
+Main was merged after both TV2 and TV1. The integrated suite now passes 146 tests
+and 71 subtests. Real subprocess claim-tool checks pass without a model:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\smoke_registry.py
+```
+
+Expected last line: `registry stdio OK; claim state unchanged`. This checks
+discovery, full claim reads, registered calculations for all four outcomes and
+safe error observations. It does not evaluate embedding quality.
+
+The existing demo's `--claim-id` option now obtains both claim data and reasoning
+through the registered MCP tools. It still needs the real embedding model for
+policy retrieval. TV2 can integrate `await dispatch_mcp(...)` into the Agent loop;
+see `docs/tool_contracts.md` for the handoff.

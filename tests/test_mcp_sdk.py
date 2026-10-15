@@ -85,7 +85,7 @@ class MCPWiringTests(unittest.TestCase):
 
     def test_registry_contains_only_current_read_tools(self):
         tools = server._tool_manager.list_tools()
-        self.assertEqual({tool.name for tool in tools}, {"search_policy", "get_claim_status"})
+        self.assertEqual({tool.name for tool in tools}, {"search_policy", "get_claim_status", "get_claim", "calculate_claim"})
 
 
 if __name__ == "__main__":
