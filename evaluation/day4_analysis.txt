@@ -1,0 +1,1114 @@
+DAY 4 - AGENT EVALUATION INFRASTRUCTURE
+
+1. PURPOSE
+
+Day 4 prepares Member 1's evaluation layer for the final end-to-end Agent.
+
+Day 4 does NOT claim final Agent performance yet.
+
+The main goals are:
+
+- integrate the latest Member 2 tool boundary;
+- understand ToolRegistry and Dispatcher;
+- define the minimum Agent output contract;
+- evaluate one Agent output;
+- aggregate metrics across many Agent outputs;
+- prepare token-usage evaluation;
+- prepare correct-refusal evaluation.
+
+Synthetic Agent outputs are used only in unit tests.
+
+They are NOT real Agent evaluation results.
+
+
+2. CONNECTION WITH DAY 1, DAY 2 AND DAY 3
+
+Day 1:
+
+Question
+    |
+    v
+Retriever
+    |
+    v
+Hit@3 / Recall@3
+
+Day 1 evaluates retrieval quality.
+
+Day 2:
+
+Query
+    |
+    v
+Dense score
+BM25 score
+Hybrid score
+    |
+    v
+Ranking analysis
+
+Day 2 explains why retrieval succeeds or fails.
+
+Day 3:
+
+Claim
+    |
+    v
+calculate_claim()
+    |
+    v
+Policy issue
+    |
+    v
+Retriever
+    |
+    v
+Expected DOC@version
+
+Day 3 evaluates Claim-to-policy Grounding@3.
+
+Day 4:
+
+Final Agent output
+    |
+    v
+Output validation
+    |
+    v
+Per-case metrics
+    |
+    v
+Aggregate metrics
+
+Day 4 prepares Agent-level evaluation.
+
+
+3. MEMBER 2 INTEGRATION
+
+At the beginning of Day 4, origin/main was merged into:
+
+member1-day4-eval
+
+Merge commit:
+
+a479927
+
+The merge added the latest Member 2 Day 3 work:
+
+- src/agent/tool_registry.py
+- src/agent/dispatcher.py
+- tests/test_dispatcher.py
+
+The existing Claim, StateStore and business-rule files were already identical.
+
+After the merge:
+
+37 tests passed.
+
+
+4. TOOL REGISTRY
+
+File:
+
+src/agent/tool_registry.py
+
+ToolRegistry defines which tools the Agent is allowed to call.
+
+Current tools:
+
+- get_claim
+- get_claim_status
+- calculate_claim
+
+The registry does not execute arbitrary model-generated Python code.
+
+The model can only select a registered tool name.
+
+This makes tool execution safer and easier to validate.
+
+
+5. TOOL OBJECT
+
+Each Tool contains:
+
+- name
+- description
+- params
+- func
+- writes
+
+Example conceptually:
+
+Tool(
+    name="get_claim_status",
+    description="Return the current persisted status of a claim.",
+    params={"claim_id": str},
+    func=get_claim_status,
+)
+
+The writes flag identifies whether the tool has side effects.
+
+The current Day 4 tools are read-only.
+
+
+6. TOOL SCHEMA
+
+Tool.schema() converts the Python tool definition into a structure that can be
+shown to an LLM.
+
+Example:
+
+{
+    "name": "get_claim_status",
+    "description": "...",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "claim_id": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "claim_id"
+        ]
+    }
+}
+
+This is useful for future LLM function/tool calling.
+
+
+7. DISPATCHER
+
+File:
+
+src/agent/dispatcher.py
+
+Dispatcher safely executes one tool call.
+
+Flow:
+
+Agent/model
+    |
+    | tool name + arguments
+    v
+Dispatcher
+    |
+    +--> find tool
+    |
+    +--> parse arguments
+    |
+    +--> validate arguments
+    |
+    +--> execute tool
+    |
+    v
+JSON observation
+
+or:
+
+Error: ...
+
+
+8. WHY DISPATCHER RETURNS ERROR STRINGS
+
+Example errors tested during Day 4:
+
+Unknown tool:
+
+Error: unknown tool 'delete_all' ...
+
+Wrong argument type:
+
+Error: argument 'claim_id' must be str, got int
+
+Missing claim:
+
+Error: Claim not found: CLM-999
+
+These errors do not crash the program.
+
+A future Agent loop can receive the Error string as an observation and decide
+what to do next.
+
+
+9. SAFE TOOL EXECUTION
+
+The Dispatcher does not use:
+
+eval()
+
+to execute model output.
+
+The model cannot directly run arbitrary Python code.
+
+Instead:
+
+tool_name
+    |
+    v
+registry.get(tool_name)
+    |
+    v
+registered function
+
+This limits execution to known tools.
+
+
+10. EXACT TYPE VALIDATION
+
+The project intentionally uses exact type checking in important places.
+
+Example:
+
+type(value) is int
+
+instead of:
+
+isinstance(value, int)
+
+Why?
+
+Because Python treats bool as a subclass of int:
+
+isinstance(True, int) == True
+
+But:
+
+True
+
+is not a valid token count.
+
+Therefore exact type checking prevents invalid usage statistics.
+
+
+11. AGENT EVALUATION CONTRACT
+
+File:
+
+evaluation/agent_eval_contract.py
+
+Commit:
+
+23f3791
+
+The evaluation layer requires the final Agent to provide at least:
+
+{
+    "answer": "...",
+    "decision": "...",
+    "evidence_refs": [...],
+    "usage": {
+        "calls": ...,
+        "prompt_tokens": ...,
+        "completion_tokens": ...,
+        "max_prompt": ...
+    }
+}
+
+
+12. VALID AGENT DECISIONS
+
+The evaluator accepts:
+
+APPROVED
+
+REJECTED
+
+ESCALATED
+
+NEED_MORE_INFO
+
+NO_ANSWER
+
+
+13. NO_ANSWER VS NEED_MORE_INFO
+
+This distinction is very important.
+
+NO_ANSWER:
+
+The Agent does not have enough policy evidence to safely answer.
+
+Example:
+
+The required policy document/version is missing.
+
+NO_ANSWER is an Agent response.
+
+It should not be persisted as ClaimStatus.
+
+
+NEED_MORE_INFO:
+
+The policy is available, but information about the claim is missing.
+
+Example:
+
+A receipt is required but the employee did not provide it.
+
+NEED_MORE_INFO can be a workflow status.
+
+
+Simple rule:
+
+missing policy evidence
+    ->
+NO_ANSWER
+
+missing claim information
+    ->
+NEED_MORE_INFO
+
+
+14. SCHEMA VALIDATION
+
+Function:
+
+validate_agent_output()
+
+Its job is only to validate the interface.
+
+It checks:
+
+- output is a dictionary;
+- required fields exist;
+- answer is a string;
+- decision is allowed;
+- evidence_refs is a list;
+- references are non-empty strings;
+- usage exists;
+- usage fields exist;
+- usage values are non-negative integers.
+
+It does NOT decide whether the Agent answer is correct.
+
+
+15. VALID FORMAT DOES NOT MEAN CORRECT ANSWER
+
+Example:
+
+{
+    "decision": "APPROVED"
+}
+
+may be structurally valid.
+
+However, if expected decision is:
+
+ESCALATED
+
+then the Agent is still wrong.
+
+Therefore:
+
+schema validation != evaluation
+
+
+16. CONTRACT TESTS
+
+File:
+
+tests/test_agent_eval_contract.py
+
+The tests include:
+
+- valid Agent output;
+- valid NO_ANSWER;
+- missing fields;
+- invalid decision;
+- invalid evidence_refs;
+- empty evidence reference;
+- missing usage;
+- negative token counts;
+- bool token values;
+- float token values.
+
+After this checkpoint:
+
+50 tests passed.
+
+
+17. PER-CASE AGENT METRICS
+
+File:
+
+evaluation/agent_metrics.py
+
+Commit:
+
+405021a
+
+Current metrics:
+
+- Decision Correctness
+- Correct Refusal
+- Evidence Coverage
+
+
+18. DECISION CORRECTNESS
+
+Formula:
+
+actual_decision == expected_decision
+
+Example:
+
+Expected:
+
+ESCALATED
+
+Actual:
+
+ESCALATED
+
+Result:
+
+True
+
+
+Example:
+
+Expected:
+
+ESCALATED
+
+Actual:
+
+APPROVED
+
+Result:
+
+False
+
+
+19. CORRECT REFUSAL
+
+Correct Refusal is evaluated only on cases whose expected decision is:
+
+NO_ANSWER
+
+Example:
+
+Expected:
+
+NO_ANSWER
+
+Actual:
+
+NO_ANSWER
+
+Correct Refusal:
+
+True
+
+
+Example:
+
+Expected:
+
+NO_ANSWER
+
+Actual:
+
+APPROVED
+
+Correct Refusal:
+
+False
+
+
+For a normal answerable case:
+
+Expected:
+
+ESCALATED
+
+Correct Refusal:
+
+None
+
+None means:
+
+not applicable.
+
+It does not mean False.
+
+
+20. EVIDENCE COVERAGE
+
+Evidence Coverage measures how much expected policy evidence appears in the
+Agent output.
+
+Formula:
+
+matched expected evidence
+-------------------------
+total expected evidence
+
+
+Example:
+
+Expected:
+
+DOC003@v1.0
+DOC007@v1.0
+
+Agent:
+
+DOC003@v1.0
+
+Matched:
+
+1
+
+Expected:
+
+2
+
+Evidence Coverage:
+
+1 / 2 = 0.5 = 50%
+
+
+21. WHY SETS ARE USED FOR EVIDENCE
+
+Suppose the Agent outputs:
+
+DOC003@v1.0
+DOC003@v1.0
+DOC003@v1.0
+
+Expected:
+
+DOC003@v1.0
+DOC007@v1.0
+
+Repeating DOC003 must not increase coverage.
+
+Therefore the evaluator converts references into sets.
+
+Coverage remains:
+
+1 / 2 = 50%
+
+
+22. EXTRA EVIDENCE
+
+Example:
+
+Expected:
+
+DOC003@v1.0
+
+Agent:
+
+DOC003@v1.0
+DOC004@v1.0
+
+Current Evidence Coverage:
+
+100%
+
+because all expected evidence is present.
+
+However, this metric does not penalize extra irrelevant evidence.
+
+This is one limitation of the current coverage metric.
+
+
+23. NO EXPECTED EVIDENCE
+
+If:
+
+expected_refs = []
+
+then:
+
+evidence_coverage = None
+
+Why not 100%?
+
+Because there is nothing to evaluate.
+
+Giving 100% to empty cases would artificially increase the average coverage.
+
+
+24. EVIDENCE COVERAGE IS NOT FAITHFULNESS
+
+This is one of the most important Day 4 concepts.
+
+Evidence Coverage asks:
+
+"Did the Agent include the expected references?"
+
+Faithfulness asks:
+
+"Are the statements in the generated answer actually supported by those
+references?"
+
+Example:
+
+Agent cites:
+
+DOC003@v1.0
+
+but writes a hotel limit that does not exist in DOC003.
+
+Evidence Coverage may still be 100%.
+
+Faithfulness should fail.
+
+Therefore:
+
+Evidence Coverage != Faithfulness
+
+
+25. PER-CASE METRIC TESTS
+
+File:
+
+tests/test_agent_metrics.py
+
+The tests include:
+
+- correct decision;
+- wrong decision;
+- correct refusal;
+- wrong refusal;
+- full evidence coverage;
+- partial evidence coverage;
+- duplicate evidence;
+- extra evidence;
+- no expected evidence;
+- invalid Agent output.
+
+After this checkpoint:
+
+62 tests passed.
+
+
+26. AGGREGATE EVALUATION
+
+File:
+
+evaluation/agent_eval_summary.py
+
+Commit:
+
+97ed41a
+
+This module combines multiple evaluation cases into one summary.
+
+It represents the next layer:
+
+Agent output
+    |
+    v
+validate
+    |
+    v
+evaluate one case
+    |
+    v
+aggregate many cases
+
+
+27. DECISION ACCURACY
+
+Formula:
+
+correct decisions
+-----------------
+total cases
+
+Example only:
+
+13 correct
+15 total
+
+Decision Accuracy:
+
+13 / 15 = 86.67%
+
+This is only an example.
+
+It is NOT the current real Agent result.
+
+
+28. CORRECT REFUSAL RATE
+
+Formula:
+
+correct NO_ANSWER decisions
+---------------------------
+expected NO_ANSWER cases
+
+Example only:
+
+3 correct refusals
+4 no-answer cases
+
+Correct Refusal Rate:
+
+3 / 4 = 75%
+
+Only expected NO_ANSWER cases are included in this denominator.
+
+
+29. AVERAGE EVIDENCE COVERAGE
+
+Suppose:
+
+Case A = 0.5
+Case B = 1.0
+
+Average:
+
+(0.5 + 1.0) / 2
+=
+0.75
+
+Cases with:
+
+evidence_coverage = None
+
+are excluded.
+
+
+30. TOKEN USAGE METRICS
+
+The evaluation contract expects:
+
+calls
+
+Number of LLM calls used during the case.
+
+prompt_tokens
+
+Total input tokens across the case.
+
+completion_tokens
+
+Total generated tokens across the case.
+
+max_prompt
+
+Largest single prompt during the case.
+
+
+Aggregate total:
+
+total_tokens
+=
+total_prompt_tokens
++
+total_completion_tokens
+
+
+Average:
+
+average_tokens_per_case
+=
+total_tokens
+/
+total_cases
+
+
+Maximum prompt:
+
+max_prompt_tokens
+=
+max(max_prompt across cases)
+
+
+31. WHY TOKEN USAGE MATTERS
+
+Token usage helps measure:
+
+- Agent efficiency;
+- Agent-loop complexity;
+- prompt growth;
+- context size;
+- approximate future cost;
+- whether unnecessary repeated LLM calls occur.
+
+Real monetary cost should only be calculated after the final model and pricing
+are known.
+
+
+32. SYNTHETIC OUTPUTS
+
+Day 4 unit tests use synthetic outputs.
+
+Example:
+
+{
+    "answer": "Test answer",
+    "decision": "ESCALATED",
+    "evidence_refs": [
+        "DOC003@v1.0"
+    ],
+    "usage": {
+        "calls": 1,
+        "prompt_tokens": 100,
+        "completion_tokens": 20,
+        "max_prompt": 100
+    }
+}
+
+This is acceptable for unit testing.
+
+It proves:
+
+the metric implementation works.
+
+It does NOT prove:
+
+the Agent performs well.
+
+
+33. AGGREGATE TESTS
+
+File:
+
+tests/test_agent_eval_summary.py
+
+Tests include:
+
+- all decisions correct;
+- wrong decisions;
+- wrong refusal;
+- average evidence coverage;
+- no refusal cases;
+- no evidence cases;
+- multiple LLM calls;
+- token aggregation;
+- max prompt;
+- empty evaluation set.
+
+After this checkpoint:
+
+69 tests passed.
+
+
+34. CURRENT DAY 4 ARCHITECTURE
+
+Final structure:
+
+Future Agent
+    |
+    | answer
+    | decision
+    | evidence_refs
+    | usage
+    v
+agent_eval_contract.py
+    |
+    | schema validation
+    v
+agent_metrics.py
+    |
+    | per-case metrics
+    v
+agent_eval_summary.py
+    |
+    | aggregate metrics
+    v
+Final evaluation report
+
+
+35. CURRENT LIMITATIONS
+
+The following are NOT available yet:
+
+- real end-to-end LLM Agent outputs;
+- real final Decision Accuracy;
+- real Correct Refusal Rate;
+- real Agent Evidence Coverage;
+- LLM Faithfulness;
+- real LLM call counts;
+- real prompt token counts;
+- real completion token counts;
+- real token cost.
+
+These must not be invented.
+
+The current Day 4 implementation only prepares the evaluation infrastructure.
+
+
+36. FUTURE FAITHFULNESS EVALUATION
+
+When real Agent-generated answers are available, Member 1 can add Faithfulness.
+
+Possible method:
+
+1. Read the Agent answer.
+2. Identify factual policy claims.
+3. Match claims to cited evidence.
+4. Check whether the evidence actually supports each claim.
+5. Calculate supported claims / total factual claims.
+
+Faithfulness must remain separate from Evidence Coverage.
+
+
+37. FINAL AGENT REQUIREMENTS FOR MEMBER 1
+
+The Agent layer should expose:
+
+answer
+
+decision
+
+evidence_refs
+
+usage.calls
+
+usage.prompt_tokens
+
+usage.completion_tokens
+
+usage.max_prompt
+
+Without these fields, the final Agent-level evaluation cannot be completed.
+
+
+38. IMPORTANT DEFENSE QUESTIONS
+
+Question:
+
+Why did you create an evaluation contract?
+
+Answer:
+
+To separate the Agent implementation from the evaluation layer. As long as the
+Agent exposes the agreed output structure, Member 1 can evaluate it without
+depending on the internal Agent implementation.
+
+
+Question:
+
+Why is NO_ANSWER different from NEED_MORE_INFO?
+
+Answer:
+
+NO_ANSWER means policy evidence is insufficient. NEED_MORE_INFO means policy
+exists but claim information is missing.
+
+
+Question:
+
+Why is Correct Refusal None for a normal question?
+
+Answer:
+
+Because Correct Refusal only applies to expected NO_ANSWER cases. A normal
+answerable case should not affect the refusal-rate denominator.
+
+
+Question:
+
+Why is Evidence Coverage not Faithfulness?
+
+Answer:
+
+Coverage checks whether expected references are present. Faithfulness checks
+whether the generated statements are actually supported by those references.
+
+
+Question:
+
+Why do you use synthetic Agent outputs?
+
+Answer:
+
+Only to unit-test metric formulas and validation logic. They are not reported
+as final system performance.
+
+
+Question:
+
+Why do you report retrieval metrics separately from Agent metrics?
+
+Answer:
+
+Good retrieval does not guarantee good Agent reasoning. Retrieval and final
+Agent behavior measure different layers of the system.
+
+
+39. CURRENT TEST RESULT
+
+Current integrated result:
+
+69 passed
+
+The test suite currently covers:
+
+- Claim models;
+- StateStore;
+- business rules;
+- ToolRegistry/Dispatcher;
+- Agent output contract;
+- per-case Agent metrics;
+- aggregate Agent metrics.
+
+
+40. DAY 4 GIT CHECKPOINTS
+
+a479927
+Merge origin/main into Member 1 Day 4 evaluation
+
+23f3791
+Add Agent evaluation output contract
+
+405021a
+Add Agent evaluation metrics
+
+97ed41a
+Add Agent evaluation summary metrics
+
+
+41. SUMMARY TO REMEMBER
+
+Day 1:
+
+Can RAG retrieve the correct policy?
+
+Day 2:
+
+Why did RAG rank documents this way?
+
+Day 3:
+
+Can business-rule issues be grounded back to the correct policy?
+
+Day 4:
+
+Can we evaluate the final Agent consistently once real Agent outputs become
+available?
+
+
+42. CONCLUSION
+
+Day 4 builds the Agent evaluation infrastructure without fabricating final
+performance results.
+
+The current system can validate an Agent output and calculate:
+
+- decision correctness;
+- correct refusal;
+- evidence coverage;
+- Decision Accuracy;
+- Correct Refusal Rate;
+- Average Evidence Coverage;
+- LLM call totals;
+- prompt token totals;
+- completion token totals;
+- average token usage;
+- maximum prompt size.
+
+The full integrated project currently passes:
+
+69 tests.
+
+Final Agent metrics will only be reported after real end-to-end Agent outputs
+are available.
