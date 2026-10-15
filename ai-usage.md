@@ -277,3 +277,15 @@ demo timed out after 45 seconds, so no success or new retrieval metric is claime
 for it. The TV1 Day 1 progress file was compared with its remote-branch version.
 These are automated checks; the student still needs to understand the changes
 and rerun the merge checkpoint after TV1 is in main.
+
+
+## TV3 Day 4 MCP registry integration (2026-10-15)
+
+Codex assisted with merging main after TV1, connecting MCP claim tools to TV2's
+existing registry/dispatcher, the async JSON/Error: client adapter, registered
+claim audit preview, tests and handoff documentation. TV2's registry and dispatcher
+were reused without edits. The full pytest suite passed 146 tests and 71 subtests.
+Real stdio registry smoke, the existing claim smoke and deterministic search smoke
+passed. The in-process integration test controls retrieval candidates; it does not
+establish real embedding quality or a completed LLM Agent run. No claim-state
+write, real-model evaluation, push or PR was performed in this session.
