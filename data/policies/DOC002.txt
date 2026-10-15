@@ -1,0 +1,15 @@
+doc_id: DOC002
+title: Travel Expense Policy
+version: 2.0
+date: 2026-01-01
+owner: Finance
+
+This policy supersedes Travel Expense Policy version 1.0.
+
+Employees must submit travel expense claims within 10 calendar days after returning from a business trip.
+
+Late submissions require manager approval before reimbursement can proceed.
+
+An individual expense of 500,000 VND or more must have a receipt.
+
+When multiple versions of this policy exist, the newest effective version must be used.

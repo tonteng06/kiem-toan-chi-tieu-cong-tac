@@ -1,0 +1,1207 @@
+DAY 4 - HẠ TẦNG ĐÁNH GIÁ AGENT
+==============================
+
+1. Mục đích
+-----------
+
+Day 4 chuẩn bị evaluation layer của Member 1 cho final end-to-end Agent.
+
+Day 4 CHƯA công bố performance cuối cùng của Agent.
+
+Mục tiêu chính:
+
+- tích hợp tool boundary mới nhất của Member 2;
+- hiểu ToolRegistry và Dispatcher;
+- định nghĩa minimum Agent output contract;
+- đánh giá một Agent output;
+- tổng hợp metric trên nhiều Agent outputs;
+- chuẩn bị token-usage evaluation;
+- chuẩn bị correct-refusal evaluation.
+
+Synthetic Agent outputs chỉ được sử dụng trong unit tests.
+
+Chúng KHÔNG phải real Agent evaluation results.
+
+
+2. Kết nối với Day 1, Day 2 và Day 3
+-----------------------------------
+
+Day 1:
+
+Question
+    |
+    v
+Retriever
+    |
+    v
+Hit@3 / Recall@3
+
+Day 1 đánh giá retrieval quality.
+
+
+Day 2:
+
+Query
+    |
+    v
+Dense score
+BM25 score
+Hybrid score
+    |
+    v
+Ranking analysis
+
+Day 2 giải thích vì sao Retriever xếp hạng như vậy.
+
+
+Day 3:
+
+Claim
+    |
+    v
+calculate_claim()
+    |
+    v
+Policy issue
+    |
+    v
+Retriever
+    |
+    v
+Expected DOC@version
+
+Day 3 đánh giá Claim-to-policy Grounding@3.
+
+
+Day 4:
+
+Final Agent output
+    |
+    v
+Output validation
+    |
+    v
+Per-case metrics
+    |
+    v
+Aggregate metrics
+
+Day 4 chuẩn bị Agent-level evaluation.
+
+
+3. Tích hợp Member 2
+--------------------
+
+Ở đầu Day 4, origin/main được merge vào:
+
+member1-day4-eval
+
+Merge commit:
+
+a479927
+
+Merge này thêm các phần mới từ Member 2:
+
+- src/agent/tool_registry.py
+- src/agent/dispatcher.py
+- tests/test_dispatcher.py
+
+Các file Claim, StateStore và business-rule hiện có giữa hai branch đã giống nhau.
+
+Sau merge:
+
+37 tests passed.
+
+
+4. ToolRegistry
+---------------
+
+File:
+
+src/agent/tool_registry.py
+
+ToolRegistry định nghĩa những tool mà Agent được phép gọi.
+
+Các tool hiện tại:
+
+- get_claim
+- get_claim_status
+- calculate_claim
+
+Registry không thực thi arbitrary model-generated Python code.
+
+Model chỉ có thể chọn tool đã được đăng ký.
+
+Điều này giúp tool execution an toàn hơn và dễ validate hơn.
+
+
+5. Tool object
+--------------
+
+Mỗi Tool chứa:
+
+- name
+- description
+- params
+- func
+- writes
+
+Ví dụ về mặt ý tưởng:
+
+Tool(
+    name="get_claim_status",
+    description="Return the current persisted status of a claim.",
+    params={"claim_id": str},
+    func=get_claim_status,
+)
+
+Ý nghĩa:
+
+name
+- tên tool mà Agent sử dụng.
+
+description
+- mô tả chức năng của tool.
+
+params
+- arguments và kiểu dữ liệu yêu cầu.
+
+func
+- Python function thực tế được gọi.
+
+writes
+- cho biết tool có side effect hay không.
+
+Các tool hiện tại trong Day 4 đều là read-only.
+
+
+6. Tool schema
+--------------
+
+Tool.schema() chuyển Python tool definition thành schema có thể cung cấp cho
+LLM.
+
+Ví dụ:
+
+{
+    "name": "get_claim_status",
+    "description": "...",
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "claim_id": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "claim_id"
+        ]
+    }
+}
+
+Schema giúp model biết:
+
+- tool nào tồn tại;
+- tool làm gì;
+- cần argument nào;
+- argument có kiểu dữ liệu gì.
+
+Điều này hữu ích cho future LLM function/tool calling.
+
+
+7. Dispatcher
+-------------
+
+File:
+
+src/agent/dispatcher.py
+
+Dispatcher có nhiệm vụ thực thi một tool call theo cách an toàn.
+
+Flow:
+
+Agent/model
+    |
+    | tool name + arguments
+    v
+Dispatcher
+    |
+    +--> tìm tool
+    |
+    +--> parse arguments
+    |
+    +--> validate arguments
+    |
+    +--> execute tool
+    |
+    v
+JSON observation
+
+hoặc:
+
+Error: ...
+
+
+8. Vì sao Dispatcher trả về Error string?
+-----------------------------------------
+
+Một số lỗi đã được kiểm tra trong Day 4:
+
+Unknown tool:
+
+Error: unknown tool 'delete_all' ...
+
+Wrong argument type:
+
+Error: argument 'claim_id' must be str, got int
+
+Missing claim:
+
+Error: Claim not found: CLM-999
+
+Các lỗi này không làm chương trình crash.
+
+Future Agent loop có thể nhận Error string như một observation rồi quyết định
+bước tiếp theo.
+
+
+9. Safe tool execution
+----------------------
+
+Dispatcher không sử dụng:
+
+eval()
+
+để chạy model output.
+
+Model không thể trực tiếp thực thi arbitrary Python code.
+
+Thay vào đó:
+
+tool_name
+    |
+    v
+registry.get(tool_name)
+    |
+    v
+registered function
+
+Điều này giới hạn việc thực thi chỉ trong các tool đã được đăng ký.
+
+
+10. Exact type validation
+-------------------------
+
+Project sử dụng exact type checking ở những vị trí quan trọng.
+
+Ví dụ:
+
+type(value) is int
+
+thay vì:
+
+isinstance(value, int)
+
+Lý do:
+
+Python xem bool là subclass của int:
+
+isinstance(True, int) == True
+
+Nhưng:
+
+True
+
+không phải token count hợp lệ.
+
+Vì vậy exact type checking giúp tránh nhận nhầm boolean thành integer usage
+statistics.
+
+
+11. Agent Evaluation Contract
+-----------------------------
+
+File:
+
+evaluation/agent_eval_contract.py
+
+Commit:
+
+23f3791
+
+Evaluation layer yêu cầu final Agent cung cấp tối thiểu:
+
+{
+    "answer": "...",
+    "decision": "...",
+    "evidence_refs": [...],
+    "usage": {
+        "calls": ...,
+        "prompt_tokens": ...,
+        "completion_tokens": ...,
+        "max_prompt": ...
+    }
+}
+
+
+12. Các Agent decision hợp lệ
+-----------------------------
+
+Evaluator chấp nhận:
+
+APPROVED
+
+REJECTED
+
+ESCALATED
+
+NEED_MORE_INFO
+
+NO_ANSWER
+
+
+13. NO_ANSWER và NEED_MORE_INFO
+-------------------------------
+
+Đây là điểm rất quan trọng.
+
+NO_ANSWER nghĩa là:
+
+Agent không có đủ policy evidence để trả lời an toàn.
+
+Ví dụ:
+
+Required policy document/version không tồn tại trong corpus.
+
+NO_ANSWER là Agent response.
+
+Nó không phải persisted ClaimStatus.
+
+
+NEED_MORE_INFO nghĩa là:
+
+Policy đã có, nhưng claim thiếu thông tin cần thiết.
+
+Ví dụ:
+
+Policy yêu cầu receipt nhưng employee chưa cung cấp receipt.
+
+NEED_MORE_INFO có thể là workflow status.
+
+
+Quy tắc nhớ nhanh:
+
+missing policy evidence
+    ->
+NO_ANSWER
+
+missing claim information
+    ->
+NEED_MORE_INFO
+
+
+14. Schema validation
+---------------------
+
+Function:
+
+validate_agent_output()
+
+Nhiệm vụ chỉ là kiểm tra interface.
+
+Nó kiểm tra:
+
+- output có phải dictionary không;
+- các required fields có tồn tại không;
+- answer có phải string không;
+- decision có nằm trong valid decisions không;
+- evidence_refs có phải list không;
+- mỗi evidence reference có phải non-empty string không;
+- usage có tồn tại không;
+- required usage fields có tồn tại không;
+- usage values có phải non-negative integer không.
+
+Nó KHÔNG đánh giá Agent trả lời đúng hay sai.
+
+
+15. Valid format không có nghĩa là Correct answer
+--------------------------------------------------
+
+Ví dụ:
+
+{
+    "decision": "APPROVED"
+}
+
+có thể đúng về format.
+
+Nhưng nếu expected decision là:
+
+ESCALATED
+
+thì Agent vẫn sai.
+
+Vì vậy:
+
+schema validation != evaluation
+
+
+16. Contract tests
+------------------
+
+File:
+
+tests/test_agent_eval_contract.py
+
+Các test kiểm tra:
+
+- valid Agent output;
+- valid NO_ANSWER;
+- missing required fields;
+- invalid decision;
+- invalid evidence_refs;
+- empty evidence reference;
+- missing usage;
+- negative token counts;
+- bool token values;
+- float token values.
+
+Sau checkpoint này:
+
+50 tests passed.
+
+
+17. Per-case Agent metrics
+--------------------------
+
+File:
+
+evaluation/agent_metrics.py
+
+Commit:
+
+405021a
+
+Các metric hiện tại:
+
+- Decision Correctness
+- Correct Refusal
+- Evidence Coverage
+
+
+18. Decision Correctness
+------------------------
+
+Công thức:
+
+actual_decision == expected_decision
+
+Ví dụ:
+
+Expected:
+
+ESCALATED
+
+Actual:
+
+ESCALATED
+
+Result:
+
+True
+
+
+Ví dụ sai:
+
+Expected:
+
+ESCALATED
+
+Actual:
+
+APPROVED
+
+Result:
+
+False
+
+
+19. Correct Refusal
+-------------------
+
+Correct Refusal chỉ được đánh giá khi expected decision là:
+
+NO_ANSWER
+
+Ví dụ:
+
+Expected:
+
+NO_ANSWER
+
+Actual:
+
+NO_ANSWER
+
+Correct Refusal:
+
+True
+
+
+Ví dụ:
+
+Expected:
+
+NO_ANSWER
+
+Actual:
+
+APPROVED
+
+Correct Refusal:
+
+False
+
+
+Với một answerable case bình thường:
+
+Expected:
+
+ESCALATED
+
+Correct Refusal:
+
+None
+
+None nghĩa là:
+
+metric này không áp dụng cho case đó.
+
+None không có nghĩa là False.
+
+
+20. Evidence Coverage
+---------------------
+
+Evidence Coverage đo mức độ Agent output chứa đủ expected policy evidence.
+
+Công thức:
+
+matched expected evidence
+-------------------------
+total expected evidence
+
+Ví dụ:
+
+Expected:
+
+DOC003@v1.0
+DOC007@v1.0
+
+Agent:
+
+DOC003@v1.0
+
+Matched:
+
+1
+
+Total expected:
+
+2
+
+Evidence Coverage:
+
+1 / 2 = 0.5 = 50%
+
+
+21. Vì sao dùng set cho evidence?
+---------------------------------
+
+Giả sử Agent output:
+
+DOC003@v1.0
+DOC003@v1.0
+DOC003@v1.0
+
+Expected:
+
+DOC003@v1.0
+DOC007@v1.0
+
+Việc lặp DOC003 không được làm tăng score.
+
+Do đó evaluator chuyển references thành set.
+
+Coverage vẫn là:
+
+1 / 2 = 50%
+
+
+22. Extra evidence
+------------------
+
+Ví dụ:
+
+Expected:
+
+DOC003@v1.0
+
+Agent:
+
+DOC003@v1.0
+DOC004@v1.0
+
+Current Evidence Coverage:
+
+100%
+
+vì toàn bộ expected evidence đều đã xuất hiện.
+
+Tuy nhiên metric này không penalize extra irrelevant evidence.
+
+Đây là một limitation của current Evidence Coverage.
+
+
+23. Không có expected evidence
+------------------------------
+
+Nếu:
+
+expected_refs = []
+
+thì:
+
+evidence_coverage = None
+
+Không trả:
+
+1.0
+
+Lý do:
+
+Không có evidence nào thực sự cần đánh giá.
+
+Nếu cho 100% ở các empty cases thì Average Evidence Coverage có thể bị tăng
+một cách không hợp lý.
+
+
+24. Evidence Coverage không phải Faithfulness
+---------------------------------------------
+
+Đây là một trong những khái niệm quan trọng nhất của Day 4.
+
+Evidence Coverage hỏi:
+
+"Agent có đưa ra các expected policy references hay không?"
+
+Faithfulness hỏi:
+
+"Các phát biểu trong câu trả lời của Agent có thực sự được evidence hỗ trợ
+hay không?"
+
+Ví dụ:
+
+Agent cite:
+
+DOC003@v1.0
+
+nhưng Agent viết một hotel limit không tồn tại trong DOC003.
+
+Khi đó:
+
+Evidence Coverage vẫn có thể = 100%
+
+nhưng:
+
+Faithfulness phải FAIL.
+
+Do đó:
+
+Evidence Coverage != Faithfulness
+
+
+25. Per-case metric tests
+-------------------------
+
+File:
+
+tests/test_agent_metrics.py
+
+Các test gồm:
+
+- correct decision;
+- wrong decision;
+- correct refusal;
+- wrong refusal;
+- full evidence coverage;
+- partial evidence coverage;
+- duplicate evidence;
+- extra evidence;
+- no expected evidence;
+- invalid Agent output.
+
+Sau checkpoint này:
+
+62 tests passed.
+
+
+26. Aggregate evaluation
+------------------------
+
+File:
+
+evaluation/agent_eval_summary.py
+
+Commit:
+
+97ed41a
+
+Module này tổng hợp nhiều Agent evaluation cases thành một summary.
+
+Luồng:
+
+Agent output
+    |
+    v
+validate
+    |
+    v
+evaluate one case
+    |
+    v
+aggregate many cases
+
+
+27. Decision Accuracy
+---------------------
+
+Công thức:
+
+correct decisions
+-----------------
+total cases
+
+Ví dụ minh họa:
+
+13 correct decisions
+15 total cases
+
+Decision Accuracy:
+
+13 / 15 = 86.67%
+
+Đây chỉ là ví dụ.
+
+Nó KHÔNG phải current real Agent result.
+
+
+28. Correct Refusal Rate
+------------------------
+
+Công thức:
+
+correct NO_ANSWER decisions
+---------------------------
+expected NO_ANSWER cases
+
+Ví dụ minh họa:
+
+3 correct refusals
+4 no-answer cases
+
+Correct Refusal Rate:
+
+3 / 4 = 75%
+
+Chỉ các expected NO_ANSWER cases mới được đưa vào denominator.
+
+
+29. Average Evidence Coverage
+-----------------------------
+
+Ví dụ:
+
+Case A = 0.5
+Case B = 1.0
+
+Average:
+
+(0.5 + 1.0) / 2
+=
+0.75
+
+Các case có:
+
+evidence_coverage = None
+
+sẽ bị loại khỏi denominator.
+
+
+30. Token Usage Metrics
+-----------------------
+
+Evaluation contract yêu cầu:
+
+calls
+
+Số lần LLM được gọi trong một case.
+
+
+prompt_tokens
+
+Tổng số input tokens của cả case.
+
+
+completion_tokens
+
+Tổng số tokens do model generate trong cả case.
+
+
+max_prompt
+
+Prompt lớn nhất trong một case.
+
+
+Aggregate total:
+
+total_tokens
+=
+total_prompt_tokens
++
+total_completion_tokens
+
+
+Average:
+
+average_tokens_per_case
+=
+total_tokens
+/
+total_cases
+
+
+Maximum prompt:
+
+max_prompt_tokens
+=
+max(max_prompt across cases)
+
+
+31. Vì sao Token Usage quan trọng?
+----------------------------------
+
+Token usage giúp đánh giá:
+
+- Agent efficiency;
+- Agent-loop complexity;
+- prompt growth;
+- context size;
+- approximate future cost;
+- Agent có gọi LLM lặp lại quá nhiều hay không.
+
+Real monetary cost chỉ nên được tính khi biết final LLM model và pricing.
+
+
+32. Synthetic outputs
+---------------------
+
+Day 4 unit tests sử dụng synthetic outputs.
+
+Ví dụ:
+
+{
+    "answer": "Test answer",
+    "decision": "ESCALATED",
+    "evidence_refs": [
+        "DOC003@v1.0"
+    ],
+    "usage": {
+        "calls": 1,
+        "prompt_tokens": 100,
+        "completion_tokens": 20,
+        "max_prompt": 100
+    }
+}
+
+Điều này hợp lệ cho unit testing.
+
+Nó chứng minh:
+
+metric implementation hoạt động đúng.
+
+Nó KHÔNG chứng minh:
+
+Agent có performance tốt.
+
+
+33. Aggregate tests
+-------------------
+
+File:
+
+tests/test_agent_eval_summary.py
+
+Các test gồm:
+
+- all decisions correct;
+- wrong decisions;
+- wrong refusal;
+- average evidence coverage;
+- no refusal cases;
+- no evidence cases;
+- multiple LLM calls;
+- token aggregation;
+- max prompt aggregation;
+- empty evaluation set.
+
+Sau checkpoint này:
+
+69 tests passed.
+
+
+34. Kiến trúc Day 4 hiện tại
+----------------------------
+
+Final structure:
+
+Future Agent
+    |
+    | answer
+    | decision
+    | evidence_refs
+    | usage
+    v
+agent_eval_contract.py
+    |
+    | schema validation
+    v
+agent_metrics.py
+    |
+    | per-case metrics
+    v
+agent_eval_summary.py
+    |
+    | aggregate metrics
+    v
+Final evaluation report
+
+
+35. Hạn chế hiện tại
+--------------------
+
+Các phần sau CHƯA có real measurements:
+
+- real end-to-end LLM Agent outputs;
+- real final Decision Accuracy;
+- real Correct Refusal Rate;
+- real Agent Evidence Coverage;
+- LLM Faithfulness;
+- real LLM call counts;
+- real prompt token counts;
+- real completion token counts;
+- real token cost.
+
+Các số liệu này không được tự tạo hoặc giả lập để báo cáo.
+
+Current Day 4 implementation chỉ chuẩn bị evaluation infrastructure.
+
+
+36. Future Faithfulness evaluation
+----------------------------------
+
+Khi có real Agent-generated answers, Member 1 có thể thêm Faithfulness.
+
+Một phương pháp có thể là:
+
+1. Đọc Agent answer.
+2. Xác định factual policy claims.
+3. Match từng claim với cited evidence.
+4. Kiểm tra evidence có thực sự support claim đó không.
+5. Tính supported claims / total factual claims.
+
+Faithfulness phải được giữ riêng với Evidence Coverage.
+
+
+37. Final Agent cần cung cấp gì cho Member 1?
+---------------------------------------------
+
+Agent layer cần expose ít nhất:
+
+answer
+
+decision
+
+evidence_refs
+
+usage.calls
+
+usage.prompt_tokens
+
+usage.completion_tokens
+
+usage.max_prompt
+
+Nếu thiếu các field này thì final Agent-level evaluation chưa thể hoàn chỉnh.
+
+
+38. Các câu hỏi bảo vệ quan trọng
+---------------------------------
+
+Câu hỏi:
+
+Why did you create an evaluation contract?
+
+Trả lời:
+
+Evaluation contract giúp tách Agent implementation khỏi evaluation layer.
+
+Chỉ cần Agent expose đúng agreed output structure thì Member 1 có thể đánh giá
+Agent mà không cần phụ thuộc vào implementation nội bộ của Agent.
+
+
+Câu hỏi:
+
+Why is NO_ANSWER different from NEED_MORE_INFO?
+
+Trả lời:
+
+NO_ANSWER nghĩa là thiếu policy evidence.
+
+NEED_MORE_INFO nghĩa là policy đã có nhưng claim thiếu required information.
+
+
+Câu hỏi:
+
+Why is Correct Refusal None for a normal question?
+
+Trả lời:
+
+Vì Correct Refusal chỉ áp dụng với expected NO_ANSWER cases.
+
+Normal answerable cases không nên ảnh hưởng denominator của refusal rate.
+
+
+Câu hỏi:
+
+Why is Evidence Coverage not Faithfulness?
+
+Trả lời:
+
+Coverage kiểm tra expected references có xuất hiện hay không.
+
+Faithfulness kiểm tra các generated statements có thực sự được references hỗ
+trợ hay không.
+
+
+Câu hỏi:
+
+Why do you use synthetic Agent outputs?
+
+Trả lời:
+
+Chỉ để unit-test metric formulas và validation logic.
+
+Synthetic outputs không được dùng làm final system performance.
+
+
+Câu hỏi:
+
+Why do you report retrieval metrics separately from Agent metrics?
+
+Trả lời:
+
+Good retrieval không đảm bảo good Agent reasoning.
+
+Retriever có thể đưa đúng evidence nhưng Agent vẫn có thể decision sai hoặc tạo
+unsupported statements.
+
+
+39. Current test result
+-----------------------
+
+Current integrated result:
+
+69 passed
+
+Test suite hiện cover:
+
+- Claim models;
+- StateStore;
+- business rules;
+- ToolRegistry/Dispatcher;
+- Agent output contract;
+- per-case Agent metrics;
+- aggregate Agent metrics.
+
+
+40. Day 4 Git checkpoints
+-------------------------
+
+a479927
+Merge origin/main into Member 1 Day 4 evaluation
+
+23f3791
+Add Agent evaluation output contract
+
+405021a
+Add Agent evaluation metrics
+
+97ed41a
+Add Agent evaluation summary metrics
+
+cb89c55
+Document Day 4 Agent evaluation
+
+
+41. Tóm tắt dễ nhớ
+------------------
+
+Day 1:
+
+RAG có retrieve đúng policy không?
+
+
+Day 2:
+
+Vì sao RAG xếp hạng documents theo thứ tự đó?
+
+
+Day 3:
+
+Business-rule issues có grounding về đúng policy hay không?
+
+
+Day 4:
+
+Khi final Agent có real output, chúng ta có thể đánh giá Agent một cách nhất
+quán hay không?
+
+
+42. Kết luận
+------------
+
+Day 4 xây dựng Agent evaluation infrastructure mà không tạo giả final
+performance results.
+
+Current system có thể validate Agent output và tính:
+
+- Decision Correctness;
+- Correct Refusal;
+- Evidence Coverage;
+- Decision Accuracy;
+- Correct Refusal Rate;
+- Average Evidence Coverage;
+- Total LLM Calls;
+- Prompt Tokens;
+- Completion Tokens;
+- Total Tokens;
+- Average Tokens per Case;
+- Maximum Prompt Size.
+
+Toàn bộ integrated project hiện tại:
+
+69 tests passed.
+
+Final Agent metrics chỉ được báo cáo sau khi có real end-to-end Agent outputs
+và real usage data.

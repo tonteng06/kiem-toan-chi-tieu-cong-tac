@@ -1,0 +1,351 @@
+DAY 3 - PHÂN TÍCH CLAIM-TO-POLICY GROUNDING
+===========================================
+
+1. Mục đích
+-----------
+
+Day 3 tích hợp RAG Retriever của Member 1 với Claim và business-rule layer
+của Member 2.
+
+Mục tiêu của evaluation này là kiểm tra xem mỗi policy issue được phát hiện bởi
+deterministic business rules có thể được grounding về đúng policy document và
+đúng version thông qua RAG Retriever hay không.
+
+Đây là grounding evaluation, không phải LLM faithfulness evaluation.
+
+Faithfulness cần có câu trả lời thực tế do Agent tạo ra, nên chỉ có thể đánh giá
+sau khi Agent output interface hoàn chỉnh.
+
+
+2. Các thành phần được tích hợp
+-------------------------------
+
+Member 1:
+
+- Policy corpus
+- Document và Chunk models
+- Dense retrieval
+- Hybrid BM25 + Dense retrieval
+- Retriever facade
+
+Member 2:
+
+- Claim và Expense models
+- Claim status transitions
+- JSON StateStore
+- Deterministic calculate_claim business rules
+
+RAG implementation gốc của Member 1 không bị thay đổi trong quá trình tích hợp
+Day 3.
+
+
+3. Phương pháp đánh giá
+-----------------------
+
+Mỗi sample claim được đưa qua:
+
+calculate_claim(claim)
+
+Business-rule output chứa:
+
+- violations
+- missing_data
+- recommended_status
+- evidence reference, ví dụ DOC003@v1.0
+
+Với mỗi violation hoặc missing-data issue, trường:
+
+issue["message"]
+
+được dùng làm retrieval query.
+
+Cả Dense và Hybrid đều được đánh giá với Top-3 unique document/version
+references.
+
+Một issue được tính là grounded nếu expected evidence reference xuất hiện trong
+Top-3 retrieved references.
+
+Ví dụ:
+
+CLM-002
+
+Issue:
+
+HOTEL_OVER_LIMIT
+
+Expected evidence:
+
+DOC003@v1.0
+
+Hybrid retrieved:
+
+1. DOC003@v1.0
+2. DOC004@v1.0
+3. DOC008@v1.0
+
+Vì DOC003@v1.0 xuất hiện trong Top-3 nên issue này được tính là grounded.
+
+
+4. Các case được đánh giá
+-------------------------
+
+CLM-001
+
+Recommended status:
+
+APPROVED
+
+Không có policy issue cần issue-level grounding.
+
+
+CLM-002
+
+Issue:
+
+HOTEL_OVER_LIMIT
+
+Expected evidence:
+
+DOC003@v1.0
+
+Recommended status:
+
+ESCALATED
+
+
+CLM-003
+
+Issue:
+
+MISSING_RECEIPT
+
+Expected evidence:
+
+DOC006@v1.0
+
+Recommended status:
+
+NEED_MORE_INFO
+
+
+CLM-004
+
+Issue:
+
+NO_HOTEL_POLICY
+
+Expected evidence:
+
+DOC008@v1.0
+
+Recommended status:
+
+ESCALATED
+
+
+CLM-005
+
+Recommended status:
+
+APPROVED
+
+Không có policy issue cần issue-level grounding.
+
+Existing APPROVED state được bảo vệ riêng bởi StateStore transition rules.
+
+
+CLM-006
+
+Issue:
+
+NOT_REIMBURSABLE
+
+Expected evidence:
+
+DOC004@v1.0
+
+Recommended status:
+
+REJECTED
+
+
+CLM-007
+
+Issue:
+
+LATE_SUBMISSION
+
+Expected evidence:
+
+DOC002@v2.0
+
+Recommended status:
+
+ESCALATED
+
+
+5. Kết quả
+----------
+
+Dense:
+
+- Total issues: 5
+- Grounded issues: 5
+- Grounding@3: 100%
+
+Hybrid:
+
+- Total issues: 5
+- Grounded issues: 5
+- Grounding@3: 100%
+
+Cả 5 issue-level policy references đều được retrieve thành công trong Top-3
+ở cả Dense và Hybrid.
+
+Evaluation kiểm tra cả:
+
+doc_id
+
+và:
+
+policy version
+
+Ví dụ:
+
+DOC002@v2.0
+
+thay vì chỉ kiểm tra:
+
+DOC002
+
+
+6. Khác biệt giữa Day 1, Day 2 và Day 3
+---------------------------------------
+
+Day 1:
+
+Đánh giá question-to-policy retrieval bằng:
+
+Hit@3
+Recall@3
+
+
+Day 2:
+
+Phân tích chi tiết:
+
+Dense score
+BM25 score
+Hybrid score
+
+cho Q13, Q14 và Q15.
+
+
+Day 3:
+
+Đánh giá xem các issue được tạo bởi business-rule layer có thể được grounding
+về đúng policy document và version thông qua RAG Retriever hay không.
+
+Do đó Day 3 kết nối:
+
+claim/business-rule layer
+
+với:
+
+RAG layer
+
+thay vì đánh giá từng layer riêng biệt.
+
+
+7. Hạn chế
+----------
+
+Grounding@3 không giống Answer Faithfulness.
+
+Evaluation hiện tại chưa đo:
+
+- LLM answer faithfulness
+- Correct Refusal Rate từ Agent output
+- token usage
+- LLM call count
+- prompt token count
+- completion token count
+- max prompt size
+
+Các metric này cần Agent end-to-end cung cấp output và usage information.
+
+Business rules hiện tại cũng mirror một số policy values thành deterministic
+constants.
+
+Điều này hữu ích cho calculation và testing, nhưng final Agent vẫn phải sử dụng
+retrieved policy evidence để grounding quyết định của mình.
+
+Ngoài ra, business-rule issue messages có thể đã chứa các từ hoặc giá trị liên
+quan trực tiếp đến policy, ví dụ:
+
+- city name
+- reimbursement limit
+- receipt requirement
+
+Vì vậy Claim-to-policy Grounding@3 chủ yếu đo:
+
+integration compatibility
+
+giữa business-rule layer và Retriever.
+
+Không nên hiểu metric này là independent end-to-end grounding hoặc reasoning
+metric.
+
+
+Ground Transportation Policy coverage trong calculate_claim hiện chưa hoàn chỉnh.
+
+Receipt requirements đã được kiểm tra, nhưng chưa phải toàn bộ
+transportation-specific policy rules đều được thể hiện trong deterministic
+business rules hiện tại.
+
+
+8. Artifacts
+------------
+
+evaluation/evaluate_claim_grounding.py
+
+- Script tái tạo Claim-to-policy Grounding evaluation.
+
+
+evaluation/claim_grounding_results.csv
+
+- Kết quả Dense và Hybrid theo từng issue.
+
+
+evaluation/claim_grounding_summary.csv
+
+- Kết quả Grounding@3 tổng hợp.
+
+
+evaluation/day3_analysis.txt
+
+- Tài liệu mô tả methodology, results và limitations của Day 3.
+
+
+9. Kết luận
+-----------
+
+Day 3 integration xác nhận rằng deterministic policy issues hiện tại của
+Member 2 tương thích với RAG pipeline của Member 1.
+
+Đối với cả 5 policy issues được đánh giá, cả Dense và Hybrid đều retrieve được
+đúng expected document và version trong Top-3.
+
+Kết quả hiện tại:
+
+Dense Grounding@3 = 100%
+
+Hybrid Grounding@3 = 100%
+
+Tuy nhiên, đây chưa phải final Agent evaluation.
+
+Giai đoạn end-to-end tiếp theo cần actual Agent-generated answers để đo:
+
+- Faithfulness
+- Correct Refusal
+- Token Usage

@@ -1,0 +1,13 @@
+doc_id: DOC005
+title: Ground Transportation Policy
+version: 1.0
+date: 2026-02-01
+owner: Finance
+
+Taxi and ride-hailing expenses are reimbursable when they are for an approved business purpose.
+
+The employee must record the business purpose of the transportation expense.
+
+An individual taxi or ride-hailing expense of 500,000 VND or more requires a receipt.
+
+Luxury vehicle upgrades are not reimbursable unless prior approval was obtained.

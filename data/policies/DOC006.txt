@@ -1,0 +1,15 @@
+doc_id: DOC006
+title: Receipt Requirements
+version: 1.0
+date: 2026-02-01
+owner: Finance
+
+A receipt is required for every individual expense of 500,000 VND or more.
+
+Expenses below 500,000 VND may be submitted without a receipt unless another policy requires one.
+
+If a required receipt is missing, the expense cannot be automatically approved.
+
+A manager may approve an exception after reviewing the supporting explanation.
+
+The system must record when a required receipt is missing.

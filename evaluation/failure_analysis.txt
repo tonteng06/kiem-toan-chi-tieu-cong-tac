@@ -1,0 +1,89 @@
+Travel Expense RAG - Retrieval Failure Analysis
+Date: 2026-10-12
+Top-K: 3
+
+1. Overall results
+
+Dense:
+Hit@3 = 100.00%
+Recall@3 = 100.00%
+
+Hybrid:
+Hit@3 = 100.00%
+Recall@3 = 95.45%
+
+Evaluation metrics were calculated only on answerable questions.
+The four no-answer questions were inspected separately.
+
+2. Main retrieval failure: Q13
+
+Question:
+An employee stays one night in Da Nang for 1800000 VND.
+The hotel limit is exceeded.
+Which policies are relevant to decide what should happen?
+
+Expected documents:
+DOC003 - Hotel Reimbursement Limits
+DOC007 - Expense Exception Policy
+
+Dense Top-3:
+DOC003, DOC008, DOC007
+
+Dense Recall@3:
+1.0
+
+Hybrid Top-3:
+DOC003, DOC008, DOC004
+
+Hybrid Recall@3:
+0.5
+
+Analysis:
+Dense retrieval successfully retrieved both required policies.
+
+Hybrid retrieval found DOC003 but failed to include DOC007 in the
+Top-3 results. The BM25 component likely increased the ranking of
+documents containing stronger lexical overlap with words related to
+hotel and travel, while DOC007 contains more general exception and
+escalation language.
+
+This shows that adding BM25 does not guarantee better retrieval for
+every query. The hybrid weights inherited from the Week 4 baseline are:
+
+BM25 weight = 0.3
+Vector weight = 0.7
+
+Possible future improvement:
+Evaluate alternative weights or use a larger candidate set before
+reranking. However, the current baseline is retained for reproducibility
+and comparison with the Week 4 implementation.
+
+3. No-answer cases
+
+Q09-Q12 contain information that does not exist in the policy corpus.
+
+The retriever still returns Top-3 documents because Dense and Hybrid
+retrieval always rank the nearest available chunks.
+
+Therefore, retrieval output alone must not be interpreted as proof that
+an answer exists.
+
+The Agent/LLM layer should inspect the retrieved evidence and refuse to
+invent unsupported information when the corpus does not contain the
+answer.
+
+4. Conclusion
+
+Dense achieved better Recall@3 than Hybrid on the current small corpus.
+
+Dense:
+100.00% Recall@3
+
+Hybrid:
+95.45% Recall@3
+
+The difference comes from Q13, where Hybrid retrieved only one of the
+two required policy documents.
+
+This failure case will be retained rather than hidden because it
+provides evidence for analysis and future retrieval tuning.

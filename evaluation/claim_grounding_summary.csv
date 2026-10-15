@@ -1,0 +1,3 @@
+mode,total_issues,grounded_issues,grounding_at_3
+dense,5,5,1.0
+hybrid,5,5,1.0

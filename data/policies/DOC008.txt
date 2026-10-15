@@ -1,0 +1,15 @@
+doc_id: DOC008
+title: International Travel Policy
+version: 1.0
+date: 2026-02-01
+owner: Finance
+
+International business travel requires prior manager approval.
+
+International meal reimbursement follows the limits defined in the Meal Allowance Policy.
+
+International hotel reimbursement limits are destination-specific and must be defined by an applicable destination policy.
+
+If no destination-specific hotel policy is available, the system must not invent a hotel limit.
+
+When the available policy information is insufficient to determine the correct reimbursement limit, the claim must be sent for manual review.

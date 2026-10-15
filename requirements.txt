@@ -1,0 +1,4 @@
+numpy
+rank-bm25
+sentence-transformers
+pytest

@@ -1,0 +1,184 @@
+DAY 2 - PHÂN TÍCH CÁCH RETRIEVER XẾP HẠNG
+===============================================
+
+Mục đích
+--------
+
+Mục tiêu của Day 2 là phân tích sâu hành vi retrieval ở các trường hợp khó hơn,
+đặc biệt là câu hỏi cần nhiều policy và câu hỏi có nhiều version của policy.
+
+Phân tích tập trung vào Q13, Q14 và Q15 trong retrieval testset.
+
+Cấu hình Hybrid baseline được giữ nguyên:
+
+Hybrid score = 0.3 * normalized BM25 score + 0.7 * Dense score
+
+Cấu hình này dựa trên cách kết hợp score trong bài Hybrid Search ở Week 4.
+Không thay đổi weight chỉ để làm cho metric đẹp hơn.
+
+
+Q13 - Hotel Limit và Exception Policy
+-------------------------------------
+
+Expected documents:
+
+- DOC003 - Hotel Reimbursement Limits
+- DOC007 - Expense Exception Policy
+
+Dense ranking:
+
+1. DOC003
+2. DOC008
+3. DOC007
+4. DOC004
+
+Hybrid ranking:
+
+1. DOC003
+2. DOC008
+3. DOC004
+4. DOC007
+
+Kết quả:
+
+Dense retrieve được cả hai expected documents trong Top 3.
+
+Hybrid retrieve được DOC003, nhưng DOC007 rơi xuống rank 4.
+
+So sánh score quan trọng:
+
+DOC007:
+- Dense score: 0.4167
+- BM25 normalized score: 0.2241
+- Hybrid score: 0.3589
+
+DOC004:
+- Dense score: 0.4023
+- BM25 normalized score: 0.2643
+- Hybrid score: 0.3609
+
+Dense đánh giá DOC007 phù hợp về ngữ nghĩa hơn DOC004.
+
+Tuy nhiên DOC004 có BM25 score cao hơn. Sau khi kết hợp hai thành phần,
+DOC004 có Hybrid score cao hơn DOC007 một chút:
+
+DOC004 Hybrid = 0.3609
+DOC007 Hybrid = 0.3589
+
+Chênh lệch chỉ là 0.0020, nhưng đủ để đẩy DOC007 từ rank 3 xuống rank 4.
+
+Trường hợp này được giữ lại như một retrieval failure thật, thay vì thay đổi
+weight chỉ để tăng metric.
+
+
+Q14 - Taxi Expense bị thiếu Receipt
+-----------------------------------
+
+Expected documents:
+
+- DOC005 - Ground Transportation Policy
+- DOC006 - Receipt Requirements
+
+Dense ranking:
+
+1. DOC005
+2. DOC006
+
+Hybrid ranking:
+
+1. DOC005
+2. DOC006
+
+Kết quả:
+
+Cả Dense và Hybrid đều retrieve thành công hai policy cần thiết trong Top 2.
+
+DOC005 có semantic score và lexical score tốt vì query chứa thông tin về taxi
+và approved business purpose.
+
+DOC006 cũng có semantic score tốt vì query có expense 600000 VND nhưng không có
+receipt.
+
+Case này cho thấy multi-policy retrieval hoạt động tốt.
+
+
+Q15 - Xung đột version của policy
+---------------------------------
+
+Expected documents:
+
+- DOC001 - Travel Expense Policy version 1.0
+- DOC002 - Travel Expense Policy version 2.0
+
+Dense ranking:
+
+1. DOC002 version 2.0
+2. DOC001 version 1.0
+
+Hybrid ranking:
+
+1. DOC002 version 2.0
+2. DOC001 version 1.0
+
+Kết quả:
+
+Cả hai retrieval mode đều retrieve được hai version liên quan trong Top 2.
+
+Metadata được giữ lại trong quá trình retrieval:
+
+DOC001:
+- Version: 1.0
+- Date: 2025-01-01
+
+DOC002:
+- Version: 2.0
+- Date: 2026-01-01
+
+DOC002 đứng trên DOC001 ở cả Dense và Hybrid.
+
+Retriever có trách nhiệm trả về evidence liên quan và giữ metadata như version
+và date.
+
+Retriever không tự quyết định version nào đang có hiệu lực.
+
+Quyết định version nào áp dụng thuộc về Agent hoặc reasoning layer, nơi có thể
+đọc retrieved evidence và metadata của policy.
+
+
+Kết luận chung
+--------------
+
+Q13:
+- Dense: thành công
+- Hybrid: thất bại một phần
+- Nguyên nhân chính: thành phần lexical BM25 làm thay đổi thứ hạng giữa DOC004
+  và DOC007.
+
+Q14:
+- Dense: thành công
+- Hybrid: thành công
+- Thể hiện multi-policy retrieval hoạt động đúng.
+
+Q15:
+- Dense: thành công
+- Hybrid: thành công
+- Thể hiện retrieval có giữ và sử dụng thông tin version.
+
+Phân tích Day 2 cho thấy Hybrid retrieval không phải lúc nào cũng tốt hơn Dense.
+
+Dense có thể tốt hơn khi ý nghĩa ngữ nghĩa quan trọng hơn lexical overlap chính xác.
+
+Hybrid vẫn hữu ích vì kết hợp semantic similarity với lexical matching, nhưng
+ranking phụ thuộc vào weight giữa hai thành phần.
+
+
+Artifacts
+---------
+
+Detailed scores và rankings được lưu tại:
+
+evaluation/day2_reasoning_cases.csv
+
+Script dùng để tái tạo phân tích:
+
+evaluation/day2_reasoning_analysis.py
