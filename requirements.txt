@@ -2,3 +2,4 @@ mcp>=2,<3
 numpy
 rank-bm25
 sentence-transformers
+pytest
