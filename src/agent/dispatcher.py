@@ -41,10 +41,12 @@ def validate_args(tool: Tool, args: dict) -> None:
     unknown = sorted(set(args) - set(tool.params))
     if unknown:
         raise ToolArgError(f"unknown argument(s) for {tool.name}: {unknown}")
-    missing = [k for k in tool.params if k not in args]
+    missing = [k for k in tool.params if k not in args and k not in tool.defaults]
     if missing:
         raise ToolArgError(f"missing argument(s) for {tool.name}: {missing}")
     for key, expected in tool.params.items():
+        if key not in args:  # optional argument left out; the default is applied at call time
+            continue
         # exact type check: True must not pass as an int
         if type(args[key]) is not expected:
             raise ToolArgError(
