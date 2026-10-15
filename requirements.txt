@@ -3,3 +3,4 @@ numpy
 rank-bm25
 sentence-transformers
 pytest
+jsonschema>=4,<5

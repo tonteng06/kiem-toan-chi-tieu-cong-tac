@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 import json
+from weakref import ref
 
 from mcp import Client, StdioServerParameters
 from mcp.types import CallToolResult, TextContent, Tool
@@ -12,6 +13,23 @@ from mcp.types import CallToolResult, TextContent, Tool
 from src.mcp_server.contracts import SearchPolicyOutput
 from src.mcp_server.evidence import parse_search_payload
 from src.agent.dispatcher import parse_args
+
+# SDK Client is unhashable, so WeakKeyDictionary cannot key it directly.
+# Identity + weak reference avoids retaining closed clients or reusing stale IDs.
+_DISCOVERY = {}
+
+
+def _cache_tools(client, tools):
+    key = id(client)
+    def forget(reference):
+        cached = _DISCOVERY.get(key)
+        if cached is not None and cached[0] is reference:
+            _DISCOVERY.pop(key, None)
+    try:
+        reference = ref(client, forget)
+    except TypeError:
+        return  # non-SDK test doubles may not support weak references
+    _DISCOVERY[key] = (reference, tuple(tools))
 
 
 def search_payload(response: CallToolResult) -> SearchPolicyOutput:
@@ -43,10 +61,14 @@ async def connect(
         yield client
 
 
-async def discover_tools(client: Client) -> list[Tool]:
-    """Return the tools advertised by the connected server at runtime."""
+async def discover_tools(client: Client, *, refresh: bool = False) -> list[Tool]:
+    """Cache runtime discovery per client; refresh=True explicitly lists again."""
+    cached = _DISCOVERY.get(id(client))
+    if not refresh and cached is not None and cached[0]() is client:
+        return list(cached[1])
     response = await client.list_tools()
-    return response.tools
+    _cache_tools(client, response.tools)
+    return list(response.tools)
 
 
 async def call_tool(
