@@ -128,3 +128,15 @@ The existing demo's `--claim-id` option now obtains both claim data and reasonin
 through the registered MCP tools. It still needs the real embedding model for
 policy retrieval. TV2 can integrate `await dispatch_mcp(...)` into the Agent loop;
 see `docs/tool_contracts.md` for the handoff.
+
+The newer plan also provides a synchronous `McpToolbox` for TV2's synchronous
+Agent loop. See `docs/mcp_toolbox_handoff.md` for the `schemas()` / `call()` port,
+schema conversion, cached discovery and clean connection shutdown.
+
+```powershell
+.\.venv\Scripts\python.exe scripts\smoke_adapter.py
+```
+
+This saves complete real-stdio evidence to `evaluation/day4_adapter_smoke.json`
+and finishes with `adapter stdio OK`. The expanded suite passes 177 tests and
+71 subtests, including dynamic tool addition and raw server stdout inspection.

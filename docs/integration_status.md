@@ -56,3 +56,24 @@ Commit:
 - Evaluation: member 1's retrieval baseline is recorded on their branch.
 - Blocker: confirm tool ownership and the `NO_ANSWER` / `NEED_MORE_INFO`
   mapping.
+
+
+## Day 4 update - 2026-10-15
+
+- Main containing TV1 and TV2 was merged as bd9cee8; tests and real stdio pass.
+- The server exposes four read tools and delegates claim calls to TV2's registry.
+- adapters.McpToolbox supplies the synchronous schemas()/call() port; an owned
+  worker thread runs one MCP session, discovers once and refreshes explicitly.
+- Full schema/result adapters and untruncated history are implemented. Existing
+  async helpers also cache discovery per client.
+- Handoff for TV2: docs/mcp_toolbox_handoff.md. The owner has not yet confirmed
+  wiring this port into the full Agent loop; no such confirmation is invented.
+- Written TV2 confirmation/date for earlier edits to its files remains pending.
+- TV1's new canonical RetrievedChunk/evidence_ref module is not on the merged
+  main snapshot yet. Update the serialization boundary to import it when ready;
+  do not define a duplicate canonical chunk reference in TV3.
+- Day 5 remains: integrate Agent action gating, submit_decision and read-back
+  verification. Real embedding/LLM quality and end-to-end writes are not claimed
+  by the passing adapter smoke.
+- The new plan requires the above owner confirmations before marking merge/PR
+  readiness complete. No new PR or remote merge is claimed here.

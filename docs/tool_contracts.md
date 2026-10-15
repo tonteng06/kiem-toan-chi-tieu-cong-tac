@@ -101,6 +101,14 @@ model; the full Agent owner still controls the eventual action boundary.
 
 ## Day 4 registry adapter (15 October)
 
+The new synchronous Agent port is `adapters.McpToolbox`: `schemas()` and
+`call(name, args) -> str`, backed by one SDK connection in a worker thread.
+It discovers tools once, supports explicit `refresh()`, converts schemas to TV2's
+format and retains complete raw results in `history`. `LocalToolbox` wraps TV2's
+unchanged local registry with the same port. See `docs/mcp_toolbox_handoff.md`
+for lifetime, timeout, normalization and owner-confirmation details. The async
+helpers below remain supported; discovery is now cached per client.
+
 The three claim tools are registered in TV2's `build_registry`. The MCP server
 uses `registry_adapter.dispatch_read_tool` -> TV2 `dispatch` -> the original
 registered function. Validation and business rules remain owned by TV2. The

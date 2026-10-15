@@ -289,3 +289,17 @@ Real stdio registry smoke, the existing claim smoke and deterministic search smo
 passed. The in-process integration test controls retrieval candidates; it does not
 establish real embedding quality or a completed LLM Agent run. No claim-state
 write, real-model evaluation, push or PR was performed in this session.
+
+
+## TV3 Day 4 supplemental plan implementation
+
+Codex assisted with the MCP-to-LLM schema/result adapters, a synchronous worker-
+thread McpToolbox, discovery caching, LocalToolbox compatibility, full raw-history
+retention and clean shutdown. The new tests include a real dynamic MCP server,
+raw stdout JSON-RPC inspection and a crashing subprocess. The complete suite
+passed 177 tests and 71 subtests; smoke_adapter completed with adapter stdio OK
+and saved actual schemas/results to evaluation/day4_adapter_smoke.json.
+
+No TV2 approval date, completed LLM integration, canonical TV1 provenance module,
+real embedding quality, remote push or PR is claimed by this supplement. The
+prepared handoff identifies those owner confirmations and Day 5 work explicitly.
