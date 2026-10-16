@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 import json
+import os
 from weakref import ref
 
 from mcp import Client, StdioServerParameters
@@ -56,7 +57,13 @@ async def connect(
     cwd: str | None = None,
 ) -> AsyncIterator[Client]:
     """Start an MCP server process and open a client connection to it."""
-    parameters = StdioServerParameters(command=command, args=args, cwd=cwd)
+    # The SDK inherits a minimal environment. Forward only documented runtime
+    # configuration so retrieval can use the host proxy/cache and isolated state.
+    keys = {"AIPR_STATE_PATH", "HF_HOME", "HF_HUB_CACHE", "HF_HUB_OFFLINE",
+            "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
+            "http_proxy", "https_proxy", "all_proxy", "no_proxy"}
+    environment = {key: value for key, value in os.environ.items() if key in keys}
+    parameters = StdioServerParameters(command=command, args=args, cwd=cwd, env=environment)
     async with Client(parameters) as client:
         yield client
 

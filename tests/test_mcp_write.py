@@ -58,3 +58,28 @@ def test_actual_stdio_write_is_followed_by_readback(tmp_path):
     index = names.index("submit_decision")
     assert names[index + 1] == "get_claim_status"
     assert json.loads(output.read_text())["disk_verified"]
+
+
+def test_client_forwards_only_runtime_configuration(monkeypatch):
+    from contextlib import asynccontextmanager
+    import asyncio
+    from src.mcp_server.client import connect
+    captured = []
+    monkeypatch.setenv("AIPR_STATE_PATH", "/tmp/example.json")
+    monkeypatch.setenv("HF_HOME", "/tmp/cache")
+    monkeypatch.setenv("SECRET_EXAMPLE_KEY", "must-not-forward")
+
+    @asynccontextmanager
+    async def fake_client(parameters):
+        captured.append(parameters)
+        yield object()
+
+    async def exercise():
+        with patch("src.mcp_server.client.Client", fake_client):
+            async with connect("python", ["-m", "src.mcp_server.server"]):
+                pass
+
+    asyncio.run(exercise())
+    assert captured[0].env["AIPR_STATE_PATH"] == "/tmp/example.json"
+    assert captured[0].env["HF_HOME"] == "/tmp/cache"
+    assert "SECRET_EXAMPLE_KEY" not in captured[0].env
