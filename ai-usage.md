@@ -303,3 +303,11 @@ and saved actual schemas/results to evaluation/day4_adapter_smoke.json.
 No TV2 approval date, completed LLM integration, canonical TV1 provenance module,
 real embedding quality, remote push or PR is claimed by this supplement. The
 prepared handoff identifies those owner confirmations and Day 5 work explicitly.
+
+## TV3 2026-10-16
+
+AI assisted with comparing the revised assignment against GitHub main/member3-mcp,
+implementing the missing MCP write boundary using the existing TV2 StateStore and rules,
+adding isolated write/read-back demo logging, regression tests, Makefile and setup docs.
+No LLM provider was invented. Deterministic integration runs record zero LLM usage and
+are explicitly excluded from final Agent evaluation. Human review/defense remains needed.

@@ -140,3 +140,56 @@ schema conversion, cached discovery and clean connection shutdown.
 This saves complete real-stdio evidence to `evaluation/day4_adapter_smoke.json`
 and finishes with `adapter stdio OK`. The expanded suite passes 177 tests and
 71 subtests, including dynamic tool addition and raw server stdout inspection.
+
+## TV3 integration and reproducible commands (16 October)
+
+Python 3.11+ is required. From the repository root:
+
+```bash
+python -m venv .venv
+# Linux/macOS:
+. .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+make test
+make smoke
+make demo
+make logs
+make eval
+```
+
+GNU Make is optional: run the Python command shown in each Makefile target directly
+on Windows, for example `python scripts/demo_verified_audit.py --three`.
+Use `make PYTHON=.venv/bin/python test` if the virtual environment is not activated.
+For Linux CPU-only deployments, installing CPU PyTorch before requirements avoids
+unnecessary CUDA packages: `python -m pip install torch --index-url https://download.pytorch.org/whl/cpu`.
+
+`make demo` runs actual policy retrieval, the existing deterministic business rules,
+`submit_decision`, and an immediate `get_claim_status` over a real MCP stdio subprocess.
+It checks the read-back status, reason, timestamp and the actual JSON file. Missing
+retrieved policy evidence stops the flow before writing. The demo makes an isolated
+copy of sample claims; the tracked fixture remains unchanged and reruns are safe.
+The first retrieval downloads `sentence-transformers/all-MiniLM-L6-v2`; later runs
+reuse the Hugging Face cache. Downloads/network availability are cold-start prerequisites.
+
+`make logs` generates `logs/run_01.jsonl` through `run_03.jsonl` for APPROVED,
+ESCALATED and NEED_MORE_INFO. Each JSONL record contains UTC timestamp, question,
+full tool arguments/results, steps, actual usage, before/after state and verification.
+`--transport-only` provides a model-free transport/persistence check; such logs are
+explicitly marked `transport_integration` and do not prove RAG or final Agent quality.
+Both modes use deterministic reasoning, with zero LLM calls/tokens. They must not be
+reported as real LLM Agent evaluation or used to invent final performance metrics.
+
+`make eval` executes TV1's real Dense/Hybrid retrieval evaluation against
+`tests/testset.jsonl`, overwriting `evaluation/results.csv` and `summary.csv` with
+measured output. It does not produce Agent Decision Accuracy/Faithfulness. Those
+metrics require TV2's real provider and actual Agent outputs via TV1's evaluation contract.
+A model/download failure is a failed evaluation, never a cached-success substitute.
+
+The MCP server now discovers five tools including `submit_decision`. A write requires
+claim ID, persistable decision, non-empty reason and document/version evidence refs.
+The server checks the existing rule recommendation, policy references and allowed
+state transition before saving through TV2's StateStore. NO_ANSWER is never persisted.
+The caller must immediately call `get_claim_status` and compare the returned fields.
+`.env.example` documents optional environment variables; export them before starting
+the server (the application does not automatically load `.env`).

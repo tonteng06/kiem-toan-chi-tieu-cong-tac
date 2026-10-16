@@ -1,10 +1,10 @@
-# MCP tool contracts and read-only Agent handoff
+# MCP tool contracts and Agent handoff
 
-Status: `search_policy` and `get_claim_status` are implemented on the
-`member3-mcp` integration branch. The 14 October read-only bridge connects these
-responses to the existing deterministic reasoner. `submit_decision` is scheduled
-for Day 5. The Day 4 registry adapters expose four read tools: `search_policy`,
-`get_claim`, `calculate_claim`, `get_claim_status`. The server/client use MCP SDK 2.x.
+Status (16 October): the MCP server exposes four read tools (`search_policy`,
+`get_claim`, `calculate_claim`, `get_claim_status`) and one write tool
+(`submit_decision`). Reads use the TV2 registry; writes use its StateStore and rules.
+The 14 October read-only bridge remains available. The verified demo adds explicit
+write/read-back without replacing TV2's Agent loop. Server/client use MCP SDK 2.x.
 
 ## Shared conventions
 
@@ -207,3 +207,18 @@ again and compare the actual status with the expected status.
 - Claim reads use `StateStore` and return an explicit MCP tool error for an
   unknown claim.
 
+
+## 16 October write integration
+
+`submit_decision(claim_id, decision, reason, evidence_refs)` is now exposed over MCP.
+`decision` is APPROVED / REJECTED / ESCALATED / NEED_MORE_INFO; NO_ANSWER is not a write.
+Refs use the agreed document-level form `DOC003@v1.0`. Server checks required coverage,
+known versions, calculated recommendation and StateStore transitions. Exceptions become
+`Error:` observations. Side effects go through the existing StateStore atomic save.
+Read-back is deliberately a separate tools/call, immediately after write. Compare
+claim_id/status/reason/updated_at; a successful submit response alone is insufficient.
+
+The demo configures `AIPR_STATE_PATH` only in its child process, using a temporary copy
+of the tracked claims. Production/default behavior still uses the configured store.
+One stdio server serializes writes; multiple independent server processes must not
+share a JSON state file because StateStore does not implement multi-process locking.

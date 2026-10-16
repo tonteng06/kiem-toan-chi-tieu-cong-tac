@@ -77,3 +77,16 @@ Commit:
   by the passing adapter smoke.
 - The new plan requires the above owner confirmations before marking merge/PR
   readiness complete. No new PR or remote merge is claimed here.
+
+## TV3 16 October revised schedule
+
+Main efc683b was merged locally into member3-mcp without conflicts (078d03e).
+The missing write tool is now implemented using the existing StateStore/rules;
+read-back is a separate immediate MCP call and the demo checks the file as well.
+See docs/tv3-day6-handoff.md and progress/2026-10-16-tv3.md for scope and verification.
+The three committed logs now contain real MiniLM retrieval + deterministic rules +
+MCP/file integration, with zero LLM calls; they are not final LLM Agent evaluation.
+Actual make eval passed: Dense Hit@3/Recall@3 100%/100%; Hybrid 100%/95.45%.
+Full test checkpoint: 218 passed, 71 subtests passed. Real provider/Agent evaluation
+and written owner acceptance remain pending; existing historical notes above are
+checkpoints, not claims that these newer requirements are complete.

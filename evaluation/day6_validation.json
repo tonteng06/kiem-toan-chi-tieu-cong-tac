@@ -1,0 +1,61 @@
+{
+  "timestamp": "2026-10-16T13:24:20.174291+00:00",
+  "python": "3.12.14",
+  "packages": {
+    "mcp": "2.3.0",
+    "pytest": "9.1.1",
+    "sentence-transformers": "6.1.0",
+    "torch": "2.14.1+cpu",
+    "huggingface-hub": "1.33.0",
+    "socksio": "1.0.0"
+  },
+  "tests": {
+    "passed": 218,
+    "subtests_passed": 71,
+    "seconds": 3.86,
+    "trusted_ca_followup_tests_passed": 9
+  },
+  "commands": {
+    "make smoke": "passed",
+    "make demo": "passed (real MiniLM retrieval, deterministic reasoning, actual MCP write/read-back)",
+    "HF_HUB_OFFLINE=1 make logs": "passed",
+    "make eval": "passed"
+  },
+  "retrieval_summary": [
+    {
+      "mode": "dense",
+      "answerable_questions": "11",
+      "hit_at_3": "1.0",
+      "recall_at_3": "1.0"
+    },
+    {
+      "mode": "hybrid",
+      "answerable_questions": "11",
+      "hit_at_3": "1.0",
+      "recall_at_3": "0.9545454545454546"
+    }
+  ],
+  "testset_sha256": "28c0a07d72e6ccf7e137477a218a6cdd12c01fec1062ea1e3c810e0f23e0c735",
+  "runs": [
+    {
+      "path": "logs/run_01.jsonl",
+      "sha256": "1f5f468d1864b81448147755865de8ea9a69f52c31c005c057565d92c435d349",
+      "decision": "APPROVED",
+      "tool_calls": 9
+    },
+    {
+      "path": "logs/run_02.jsonl",
+      "sha256": "d5f7d8aaf1791da28332b33264baa52a39350af3bdf88ff773919fb91f459e77",
+      "decision": "ESCALATED",
+      "tool_calls": 9
+    },
+    {
+      "path": "logs/run_03.jsonl",
+      "sha256": "314b3e30c4476f6b7c94308e9d3c0e62e03cdf900b17abd8fa1a3abb3ed70daa",
+      "decision": "NEED_MORE_INFO",
+      "tool_calls": 9
+    }
+  ],
+  "final_llm_agent_evaluation": false,
+  "llm_provider_pending_tv2": true
+}
