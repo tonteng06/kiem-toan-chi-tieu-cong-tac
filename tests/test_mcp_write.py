@@ -67,6 +67,7 @@ def test_client_forwards_only_runtime_configuration(monkeypatch):
     captured = []
     monkeypatch.setenv("AIPR_STATE_PATH", "/tmp/example.json")
     monkeypatch.setenv("HF_HOME", "/tmp/cache")
+    monkeypatch.setenv("SSL_CERT_FILE", "/tmp/ca.pem")
     monkeypatch.setenv("SECRET_EXAMPLE_KEY", "must-not-forward")
 
     @asynccontextmanager
@@ -82,4 +83,5 @@ def test_client_forwards_only_runtime_configuration(monkeypatch):
     asyncio.run(exercise())
     assert captured[0].env["AIPR_STATE_PATH"] == "/tmp/example.json"
     assert captured[0].env["HF_HOME"] == "/tmp/cache"
+    assert captured[0].env["SSL_CERT_FILE"] == "/tmp/ca.pem"
     assert "SECRET_EXAMPLE_KEY" not in captured[0].env

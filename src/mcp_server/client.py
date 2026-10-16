@@ -61,7 +61,8 @@ async def connect(
     # configuration so retrieval can use the host proxy/cache and isolated state.
     keys = {"AIPR_STATE_PATH", "HF_HOME", "HF_HUB_CACHE", "HF_HUB_OFFLINE",
             "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY",
-            "http_proxy", "https_proxy", "all_proxy", "no_proxy"}
+            "http_proxy", "https_proxy", "all_proxy", "no_proxy",
+            "SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE"}
     environment = {key: value for key, value in os.environ.items() if key in keys}
     parameters = StdioServerParameters(command=command, args=args, cwd=cwd, env=environment)
     async with Client(parameters) as client:
