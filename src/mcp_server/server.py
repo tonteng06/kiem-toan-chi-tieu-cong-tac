@@ -1,8 +1,9 @@
-"""MCP tools for policy search and claim status reads."""
+"""MCP policy/claim tools with evidence-checked writes and explicit read-back."""
 
 from __future__ import annotations
 
 import logging
+import os
 import sys
 from functools import lru_cache
 from pathlib import Path
@@ -12,6 +13,8 @@ from mcp.server import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 
 from src.agent.tool_registry import ToolRegistry, build_registry
+from src.agent.state_store import StateStore, DEFAULT_PATH
+from src.mcp_server.contracts import PersistableDecision
 from src.mcp_server.evidence import serialize_search_result
 from src.mcp_server.registry_adapter import dispatch_read_tool
 
@@ -31,8 +34,14 @@ server = MCPServer("travel-expense-audit")
 
 
 @lru_cache(maxsize=1)
+def _get_store() -> StateStore:
+    """Allow isolated demo state without changing the tracked claim fixture."""
+    return StateStore(os.environ.get("AIPR_STATE_PATH", str(DEFAULT_PATH)))
+
+
+@lru_cache(maxsize=1)
 def _get_registry() -> ToolRegistry:
-    return build_registry()
+    return build_registry(store=_get_store())
 
 
 def _call_registry(name: str, claim_id: str) -> dict:
@@ -103,6 +112,34 @@ def get_claim(claim_id: str) -> dict:
 def calculate_claim(claim_id: str) -> dict:
     """Calculate the recommendation through TV2's registered read-only tool."""
     return _call_registry("calculate_claim", claim_id)
+
+
+@server.tool()
+def submit_decision(
+    claim_id: str, decision: PersistableDecision, reason: str, evidence_refs: list[str],
+) -> dict:
+    """Persist an evidence-backed recommendation. Caller MUST immediately read status back."""
+    from src.agent.business_rules import calculate_claim as calculate
+    from src.mcp_server.agent_bridge import required_policy_refs
+    from src.rag.loader import load_documents
+
+    try:
+        if not reason.strip():
+            raise ValueError("reason must not be empty")
+        claim = _get_store().get(claim_id)
+        calculation = calculate(claim)
+        if decision != calculation["recommended_status"]:
+            raise ValueError("decision does not match the calculated recommendation")
+        required = required_policy_refs(claim, calculation)
+        supplied = set(evidence_refs)
+        known = {f"{doc.doc_id}@v{doc.version}" for doc in load_documents(POLICY_DIR)}
+        if not required <= supplied or not supplied <= known:
+            raise ValueError("missing required evidence or unknown policy/version reference")
+        updated = _get_store().update_status(claim_id, decision, reason)
+        return {"claim_id": claim_id, "decision": decision, "status": updated.status.value,
+                "updated_at": updated.updated_at}
+    except Exception as exc:
+        raise ToolError(f"Error: submit_decision failed: {exc}") from exc
 
 
 def main() -> None:

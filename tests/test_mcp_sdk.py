@@ -83,9 +83,9 @@ class MCPWiringTests(unittest.TestCase):
         self.assertEqual(payload["results"][0]["chunk_id"], chunk.chunk_id)
         self.assertEqual(payload["results"][0]["content"], chunk.content)
 
-    def test_registry_contains_only_current_read_tools(self):
+    def test_registry_contains_current_tools(self):
         tools = server._tool_manager.list_tools()
-        self.assertEqual({tool.name for tool in tools}, {"search_policy", "get_claim_status", "get_claim", "calculate_claim"})
+        self.assertEqual({tool.name for tool in tools}, {"search_policy", "get_claim_status", "get_claim", "calculate_claim", "submit_decision"})
 
 
 if __name__ == "__main__":

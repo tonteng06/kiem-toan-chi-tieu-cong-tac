@@ -19,7 +19,7 @@ async def main() -> None:
     async with connect(sys.executable, ["-m", "src.mcp_server.server"], cwd=str(ROOT)) as client:
         names = {tool.name for tool in await discover_tools(client)}
         assert {"search_policy", "get_claim", "calculate_claim", "get_claim_status"} <= names
-        assert "submit_decision" not in names
+        assert "submit_decision" in names
         print("tools:", sorted(names))
         for claim_id, expected in (("CLM-001", "APPROVED"), ("CLM-002", "ESCALATED"),
                                    ("CLM-003", "NEED_MORE_INFO"), ("CLM-006", "REJECTED")):
