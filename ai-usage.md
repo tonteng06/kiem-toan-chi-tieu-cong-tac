@@ -1,339 +1,123 @@
-# Khai báo sử dụng AI
+# Khai báo sử dụng AI — Thành viên 3
 
-## Công cụ AI đã sử dụng
+**Họ và tên:** Lê Thanh Đại Dương
+**Phần phụ trách:** MCP và tích hợp hệ thống
+**Cập nhật:** 17/10/2026
 
-Trong quá trình làm project, tôi có sử dụng ChatGPT của OpenAI để hỗ trợ học lý thuyết, giải thích code, gợi ý cách triển khai và hỗ trợ debug.
+## 1. Công cụ AI đã sử dụng
 
-Tôi không sử dụng code do AI đưa ra mà không kiểm tra. Các phần code sau khi được gợi ý đều được tôi chạy thử trên máy, xem kết quả và tìm hiểu lại cách hoạt động để có thể giải thích khi bảo vệ.
+Trong quá trình thực hiện project, tôi sử dụng ChatGPT và Codex của OpenAI để hỗ trợ tìm hiểu kiến thức, giải thích mã nguồn, đề xuất cách triển khai, viết và sửa code, kiểm thử, rà soát lỗi tích hợp và soạn tài liệu.
 
-## Phần tôi phụ trách
+Codex còn trực tiếp thao tác trên bản repository được cung cấp: chỉnh sửa file, chạy lệnh kiểm tra, tích hợp các nhánh đã có và tạo một số commit theo yêu cầu. Vì vậy, mức độ hỗ trợ của AI bao gồm cả tạo và sửa code trực tiếp, không chỉ giải thích hoặc gợi ý.
 
-Trong nhóm, tôi phụ trách phần:
+Tài liệu này tham khảo bố cục `ai-usage.md` của Thành viên 1 trên nhánh `origin/member1-final-eval`: công cụ sử dụng, phạm vi phụ trách, nội dung theo ngày, yêu cầu chính, file liên quan và cách kiểm chứng. Nội dung dưới đây khai báo phần Thành viên 3; phần Data, RAG và Evaluation vẫn được ghi nhận là đóng góp của Thành viên 1.
 
-Data + RAG + Evaluation.
+## 2. Phần tôi phụ trách
 
-Công việc chính của tôi là chuẩn bị dữ liệu policy, xây dựng phần retrieval và đánh giá kết quả tìm kiếm của hệ thống.
+Tôi phụ trách lớp MCP và kết nối các thành phần của nhóm, gồm:
 
-## Day 1
+- Xây dựng MCP server/client, khám phá công cụ khi chạy qua `tools/list` và gọi công cụ qua `tools/call`.
+- Kết nối MCP với bộ truy xuất policy của Thành viên 1 và registry, quy tắc nghiệp vụ, bộ lưu trạng thái của Thành viên 2.
+- Chuyển đổi schema và kết quả MCP sang định dạng Agent sử dụng.
+- Triển khai ghi quyết định, kiểm tra bằng chứng và đọc lại trạng thái ngay sau ghi.
+- Bổ sung kiểm thử, demo, log và hướng dẫn chạy để phục vụ tích hợp và tái lập kết quả.
 
-Ở Day 1, tôi dùng ChatGPT để hỗ trợ các phần sau:
+Agent và kết nối nhà cung cấp LLM của Thành viên 2 được tích hợp từ nhánh của thành viên đó. Việc merge và kiểm thử tích hợp không được tính là tôi tự xây dựng toàn bộ Agent hoặc RAG.
 
-- Gợi ý cách thiết kế các class `Document`, `Chunk` và `SearchResult` bằng `dataclass`.
-- Giải thích và hỗ trợ viết phần đọc dữ liệu policy từ file txt.
-- Hỗ trợ viết phần chia document thành chunk.
-- Giải thích lý do chọn `chunk_size = 500` và `overlap = 100`.
-- Giải thích embedding và cách dùng model `all-MiniLM-L6-v2`.
-- Hỗ trợ triển khai Dense Search.
-- Hỗ trợ triển khai BM25 Search.
-- Giải thích code Hybrid Search của Week 4 và hỗ trợ đưa logic này vào project.
-- Hỗ trợ xây dựng class `Retriever` để dùng chung cho Dense và Hybrid.
-- Hỗ trợ xây dựng bộ test gồm 15 câu hỏi.
-- Hỗ trợ viết phần evaluation với Hit@3 và Recall@3.
-- Hỗ trợ phân tích kết quả Dense và Hybrid.
+## 3. Nội dung được AI hỗ trợ theo tiến độ
 
-Các file có sử dụng gợi ý hoặc code được hỗ trợ bởi ChatGPT gồm:
+### Ngày 13/10 — Tìm kiếm policy và đọc trạng thái
 
-- `src/models/document.py`
-- `src/rag/loader.py`
-- `src/rag/chunker.py`
-- `src/rag/embeddings.py`
-- `src/rag/dense_search.py`
-- `src/rag/bm25_search.py`
-- `src/rag/hybrid_search.py`
-- `src/rag/retriever.py`
-- `tests/testset.jsonl`
-- `evaluation/evaluate_retrieval.py`
-- `evaluation/failure_analysis.txt`
+AI hỗ trợ xây dựng MCP server/client, công cụ tìm policy và đọc trạng thái claim. Công cụ tìm kiếm sử dụng `Retriever` có sẵn, giữ lại nội dung cùng metadata document, version và chunk để truy vết nguồn. Công cụ đọc trạng thái sử dụng `StateStore` của nhóm.
 
-File `w4/ex2_1_hybrid_search.py` là bài đã làm ở Week 4 và được tái sử dụng theo yêu cầu của project. ChatGPT chủ yếu giúp tôi đọc, hiểu và tích hợp lại logic của file này vào cấu trúc project hiện tại.
+AI hỗ trợ kiểm tra import, cú pháp, handler và viết smoke test cho discovery/call. Retrieval ở bước này dùng embedding xác định trước, chỉ xác nhận kết nối và cấu trúc dữ liệu. Kiểm tra stdio trong phiên ngày 13/10 chưa hoàn tất do event loop của môi trường bị treo.
 
-Một số câu hỏi chính tôi đã dùng với ChatGPT trong Day 1 là:
+### Ngày 14/10, rà soát ngày 15/10 — Chuẩn hóa và sửa lỗi tích hợp
 
-- Hướng dẫn tôi làm phần Data + RAG + Evaluation từng bước.
-- Giải thích code để tôi có thể hiểu và bảo vệ.
-- Hướng dẫn triển khai Dense Search, BM25 và Hybrid Search.
-- Giải thích cách tính Hit@3 và Recall@3.
-- Phân tích vì sao Hybrid Search không lấy được DOC007 trong Q13.
+AI hỗ trợ chuẩn hóa package thành `src/mcp_server`, tên công cụ thành `search_policy`, thống nhất quyết định có thể lưu và phản hồi lỗi với tiền tố `Error:`. `NO_ANSWER` được phân biệt với quyết định lưu vào trạng thái claim.
 
-## Day 2
+Trong đợt rà soát trước tích hợp, Codex trực tiếp sửa model claim, quy tắc nghiệp vụ và dữ liệu mẫu: kiểm tra kiểu dữ liệu, phân bổ tiền theo ngày/đêm, mục đích di chuyển và phê duyệt nâng hạng. Các thay đổi ngoài lớp MCP này được khai báo tại đây và trong `progress/2026-10-14-tv3.md`. Ghi chú tiến độ chưa có ngày xác nhận của Thành viên 2; tài liệu này không coi đó là xác nhận đã được cung cấp.
 
-Ở Day 2, tôi tiếp tục dùng ChatGPT để hỗ trợ phân tích sâu các câu Q13, Q14 và Q15.
+Theo log đợt rà soát, Codex chạy được 75 tests và 71 subtests, đồng thời chạy smoke stdio thành công. Demo dùng embedding thật ở bước này bị timeout và không được ghi nhận là thành công.
 
-ChatGPT hỗ trợ tôi viết các lệnh kiểm tra để xem:
+### Ngày 15/10 — Kết nối registry và giao diện cho Agent
 
-- Dense score
-- BM25 raw score
-- BM25 normalized score
-- Hybrid score
-- thứ hạng của từng document
+AI hỗ trợ tích hợp `main` sau phần việc của Thành viên 1, tái sử dụng registry/dispatcher của Thành viên 2 và bổ sung adapter cho các công cụ đọc claim, tính toán, tìm policy và đọc trạng thái.
 
-Đối với Q13, tôi dùng ChatGPT để hiểu vì sao Dense Search lấy được cả DOC003 và DOC007 nhưng Hybrid Search lại làm DOC007 rơi xuống hạng 4.
+AI hỗ trợ chuyển đổi schema MCP, chuẩn hóa kết quả JSON/lỗi, xây dựng `McpToolbox` đồng bộ với một phiên MCP trên luồng riêng, cache discovery, refresh và đóng tài nguyên. Kiểm thử bổ sung bao gồm công cụ được thêm sau kết nối, đối số sai, lỗi server, timeout, subprocess bị dừng và stdout JSON-RPC.
 
-Sau khi xem kết quả thực tế, tôi hiểu rằng DOC007 có Dense score cao hơn DOC004, nhưng DOC004 có BM25 score cao hơn. Khi kết hợp theo công thức Hybrid hiện tại:
+Kết quả cuối đợt này được ghi nhận là 177 tests và 71 subtests đạt, cùng smoke adapter stdio thành công. Đây là kiểm tra lớp công cụ và tích hợp; chưa có lượt chạy LLM thật được xác nhận trong đợt này.
 
-`Hybrid = 0.3 * BM25_normalized + 0.7 * Dense`
+### Ngày 16/10 — Ghi quyết định và đọc lại để xác minh
 
-DOC004 có Hybrid score nhỉnh hơn DOC007 một chút nên chiếm vị trí Top 3.
+AI hỗ trợ triển khai `submit_decision` dựa trên `StateStore` và quy tắc nghiệp vụ của Thành viên 2. Kiểm tra bao gồm lý do, nguồn policy, quyết định phù hợp và chuyển trạng thái hợp lệ.
 
-Đối với Q14, ChatGPT giúp tôi kiểm tra vì sao cả Dense và Hybrid đều lấy đúng DOC005 và DOC006.
+AI hỗ trợ tạo demo trên bản sao trạng thái, gọi ghi rồi đọc lại ngay, đối chiếu trạng thái, lý do, thời điểm cập nhật và dữ liệu JSON thực tế. Ba log `logs/run_01.jsonl` đến `logs/run_03.jsonl` ghi nhận retrieval thật bằng MiniLM và thao tác MCP/lưu trạng thái thật. Quyết định trong các demo dựa trên quy tắc xác định; số lượt gọi và token LLM bằng 0.
 
-Đối với Q15, tôi kiểm tra trường hợp có nhiều version của policy, cụ thể là DOC001 version 1.0 và DOC002 version 2.0. Kết quả cho thấy cả Dense và Hybrid đều retrieve được hai document này ở Top 2, trong đó DOC002 version 2.0 đứng trước DOC001 version 1.0. Qua trường hợp này tôi hiểu rằng Retriever có nhiệm vụ lấy evidence và giữ metadata về version, còn việc quyết định version nào đang có hiệu lực sẽ thuộc phần reasoning của Agent.
+AI hỗ trợ bổ sung Makefile, hướng dẫn thiết lập, `.env.example`, tài liệu bàn giao và cấu hình truyền cho subprocess. Theo tiến độ đã lưu, pytest đạt 218 tests và 71 subtests tại checkpoint này; các smoke stdio và ghi/đọc lại cũng đạt. Các kết quả này thuộc lần chạy ngày 16/10, không thay cho kiểm chứng lại ở ngày cuối.
 
+Một số commit được Codex tạo trực tiếp trong bản làm việc theo yêu cầu hỗ trợ Git. Lịch sử Git phản ánh identity tại thời điểm tạo commit; khai báo này ghi rõ AI đã tham gia triển khai và thao tác repository.
 
-Các file ở Day 2 có sử dụng gợi ý hoặc code được hỗ trợ bởi ChatGPT gồm:
+### Ngày 17/10 — Rà soát cuối và kết nối Agent với MCP
 
-- `evaluation/day2_reasoning_analysis.py`
-- `evaluation/day2_reasoning_cases.csv`
-- `evaluation/day2_analysis.txt`
+AI hỗ trợ đọc tài liệu phân công và yêu cầu nộp bài, rà soát code, phát hiện lỗi thiếu API Agent làm pytest dừng khi thu thập test, rồi merge nhánh `origin/tv2-final-agent` đã có sẵn trong repository. Lịch sử và tác giả các commit của Thành viên 2 được giữ lại.
 
-Trong đó, ChatGPT hỗ trợ tôi xây dựng script để kiểm tra Dense score, BM25 raw score, BM25 normalized score, Hybrid score và thứ hạng của document. Tôi đã trực tiếp chạy script, kiểm tra kết quả và đối chiếu lại với kết quả retrieval trước đó.
+AI hỗ trợ bổ sung `scripts/demo_agent_mcp.py` để kết nối Agent/LLM hiện có với MCP, trạng thái riêng và bước đọc lại sau ghi. Lớp kiểm tra bổ sung yêu cầu nguồn trích dẫn khi ghi phải thực sự được truy xuất kèm nội dung trong lượt chạy đó.
 
+Các test mới dùng phản hồi model và retrieval theo kịch bản để kiểm tra `APPROVED`, `ESCALATED`, `NEED_MORE_INFO`, `REJECTED` và nguồn trích dẫn chưa được truy xuất. Các test gọi handler ghi thật và đọc lại file; chúng không phải lượt chạy LLM thật qua stdio.
 
-## Day 3
+AI đồng thời cập nhật README, Makefile, cấu hình mẫu, checklist bàn giao và tiến độ. Kết quả cùng giới hạn kiểm chứng được trình bày ở mục 6.
 
-Ở Day 3, tôi tích hợp phần RAG của Member 1 với Claim, Business Rules và StateStore của Member 2 để kiểm tra khả năng grounding giữa quyết định nghiệp vụ và policy evidence.
+## 4. Các yêu cầu chính đã giao cho AI
 
-ChatGPT hỗ trợ tôi:
+Các nội dung dưới đây tóm tắt yêu cầu làm việc, không phải bản chép nguyên văn toàn bộ lịch sử hội thoại:
 
-- Kiểm tra các commit của Member 2 trước khi tích hợp.
-- Giải thích `Claim`, `Expense`, `ClaimStatus` và state transition.
-- Giải thích cách hoạt động của `StateStore`.
-- Giải thích và kiểm tra `calculate_claim`.
-- Hỗ trợ chạy regression test để bảo đảm phần RAG Day 1 và Day 2 không bị thay đổi.
-- Hỗ trợ xây dựng claim-to-policy grounding evaluation.
-- Phân biệt Claim-to-policy Grounding@3 với LLM faithfulness.
+- Phân tích tài liệu phân công và thực hiện phần MCP/tích hợp của Thành viên 3 theo từng ngày.
+- Giải thích discovery, schema, lời gọi công cụ và xử lý lỗi để phục vụ việc học và bảo vệ.
+- Kết nối RAG, registry và trạng thái claim bằng giao diện sẵn có của các thành viên.
+- Kiểm tra contract, viết regression test và xử lý lỗi tích hợp phát hiện được.
+- Xây dựng demo ghi rồi đọc lại, lưu log và giữ nguyên dữ liệu claim mẫu.
+- Rà soát yêu cầu ngày cuối, chỉ rõ kết quả đã chạy được và mục còn thiếu trước khi nộp.
+- Hỗ trợ thao tác Git và viết tài liệu bàn giao, tiến độ, khai báo AI bằng tiếng Việt.
 
-Các file Day 3 có sử dụng gợi ý hoặc code được hỗ trợ bởi ChatGPT gồm:
-
-- `evaluation/evaluate_claim_grounding.py`
-- `evaluation/claim_grounding_results.csv`
-- `evaluation/claim_grounding_summary.csv`
-- `evaluation/day3_analysis.txt`
-
-Trong Day 3, tôi không viết lại Agent của Member 2. Tôi sử dụng output từ `calculate_claim()` làm business-rule evidence và kiểm tra xem Retriever của phần tôi có retrieve lại đúng policy document và version hay không.
-
-Kết quả hiện tại:
-
-Dense:
-- Claim-to-policy Grounding@3: 100% (5/5 issues)
-
-Hybrid:
-- Claim-to-policy Grounding@3: 100% (5/5 issues)
-
-Tôi hiểu rằng metric này chưa phải LLM faithfulness. Faithfulness, correct refusal và token usage chỉ có thể được đánh giá đầy đủ khi Agent end-to-end có output và usage information.
-
-## Các prompt chính và phần code được AI hỗ trợ trực tiếp
-
-Một số prompt chính tôi đã sử dụng trong quá trình làm phần của mình:
-
-- "Hướng dẫn tôi làm phần Data + RAG + Evaluation từng bước."
-- "Giải thích Dense Search, BM25 và Hybrid Search để tôi có thể hiểu và bảo vệ."
-- "Giải thích cách tính Hit@3 và Recall@3."
-- "Phân tích vì sao Hybrid Search không lấy được DOC007 trong Q13."
-- "Giúp tôi kiểm tra trường hợp multi-policy và policy version ở Q14, Q15."
-- "Hỗ trợ xây dựng claim-to-policy grounding evaluation và phân biệt nó với LLM faithfulness."
-
-Các phần có đoạn code được ChatGPT gợi ý hoặc tạo bản nháp trực tiếp gồm:
-
-- `src/models/document.py`
-- `src/rag/loader.py`
-- `src/rag/chunker.py`
-- `src/rag/embeddings.py`
-- `src/rag/dense_search.py`
-- `src/rag/bm25_search.py`
-- `src/rag/hybrid_search.py`
-- `src/rag/retriever.py`
-- `evaluation/evaluate_retrieval.py`
-- `evaluation/day2_reasoning_analysis.py`
-- `evaluation/evaluate_claim_grounding.py`
-
-Tôi không xem các đoạn code AI tạo ra là kết quả cuối cùng ngay lập tức. Tôi đã trực tiếp chạy code, kiểm tra output, đối chiếu với policy corpus và chỉnh lại khi cần trước khi đưa vào project.
-
-## Những gì tôi đã tự kiểm tra
-
-Tôi đã trực tiếp chạy code trên máy và kiểm tra các phần sau:
-
-- Load đủ 8 policy document.
-- Kiểm tra metadata của document.
-- Kiểm tra kết quả chunking.
-- Kiểm tra embedding có 384 chiều.
-- Chạy Dense Search.
-- Chạy BM25 Search.
-- Chạy Hybrid Search.
-- Kiểm tra Retriever với hai mode Dense và Hybrid.
-- Chạy bộ test 15 câu.
-- Xác nhận testset có 4 câu no-answer và quan sát Retriever vẫn trả về các document gần nhất. Tôi chưa đánh giá correct refusal ở Agent layer vì Agent end-to-end chưa có output.
-- Chạy evaluation Dense và Hybrid.
-- Phân tích Q13, Q14 và các trường hợp multi-policy.
+## 5. Các file có AI hỗ trợ trực tiếp
 
-Kết quả Day 1 hiện tại:
+Danh sách tập trung vào phần TV3 và các thay đổi liên quan đã ghi trong tiến độ. Các file có thể chứa cả code sẵn có của nhóm và phần AI hỗ trợ bổ sung; việc liệt kê không có nghĩa toàn bộ file do AI tạo ra. Các tên file trong cùng một ô sử dụng thư mục của đường dẫn đầu tiên, trừ khi đã ghi đường dẫn khác.
 
-Dense:
+| Nhóm công việc | File liên quan |
+| --- | --- |
+| MCP server/client và contract | `src/mcp_server/server.py`, `client.py`, `contracts.py` |
+| Adapter, kết nối Agent và bằng chứng | `src/mcp_server/adapters.py`, `registry_adapter.py`, `agent_bridge.py`, `evidence.py` |
+| Smoke test và demo | `scripts/smoke_stdio.py`, `smoke_mcp_tools.py`, `smoke_registry.py`, `smoke_adapter.py`, `demo_readonly_audit.py`, `demo_verified_audit.py`, `demo_agent_mcp.py` |
+| Kiểm thử MCP và tích hợp | `tests/test_mcp_sdk.py`, `test_mcp_registry.py`, `test_adapters.py`, `test_mcp_evidence.py`, `test_mcp_write.py`, `test_agent_mcp_contract.py` |
+| Sửa lỗi model/quy tắc trước tích hợp | `src/models/claim.py`, `src/agent/business_rules.py`, `data/claims/claims.json`, `tests/test_regressions.py` |
+| Thiết lập và tài liệu | `README.md`, `Makefile`, `.env.example`, `ai-usage.md`, tài liệu MCP/tích hợp trong `docs/` và tiến độ TV3 trong `progress/` |
+| Bằng chứng chạy tự động | `evaluation/day4_adapter_smoke.json`, `day6_validation.json`, `day7_validation.json`; `logs/run_01.jsonl` đến `logs/run_03.jsonl` |
 
-- Hit@3: 100%
-- Recall@3: 100%
+## 6. Kết quả kiểm chứng và giới hạn
 
-Hybrid:
+Các kết quả dưới đây được Codex chạy hoặc kiểm tra trong môi trường làm việc và ghi lại trong repository. Tôi không trình bày kết quả tự động này như xác nhận rằng mình đã tự chạy lại hoặc đã hiểu đầy đủ mọi thay đổi.
 
-- Hit@3: 100%
-- Recall@3: 95.45%
-
-Tôi cũng giữ lại Q13 là một trường hợp retrieval chưa tốt của Hybrid để phân tích, thay vì chỉnh kết quả chỉ để metric đẹp hơn.
+| Nội dung | Kết quả ghi nhận đến phiên rà soát 17/10 |
+| --- | --- |
+| Regression ngày cuối | 236 tests và 71 subtests đạt; 21 kiểm tra phụ thuộc event loop/transport chưa được xác nhận trong lệnh chạy chọn lọc. Chưa phải toàn bộ pytest đạt. |
+| Retrieval bằng MiniLM thật | Chạy lại trên 15 câu, gồm 11 câu có đáp án và 4 câu `no_answer`. Trên 11 câu có đáp án: Dense Hit@3/Recall@3 = 100%/100%; Hybrid = 100%/95,45%. |
+| Trường hợp retrieval chưa tốt | Q13 của Hybrid thiếu DOC007 trong Top-3, recall của câu bằng 0,5; không chỉnh metric để che kết quả. |
+| Ghi và đọc lại qua MCP | Ba log thực tế ngày 16/10 có retrieval, lưu trạng thái và xác minh file; LLM usage bằng 0. |
+| Test Agent/MCP ngày cuối | Bốn quyết định và chặn citation chưa truy xuất được kiểm tra bằng phản hồi theo kịch bản; không dùng làm metric Agent cuối cùng. |
+| Lượt chạy LLM thật | Chưa thực hiện trong phiên rà soát ngày cuối vì chưa cấu hình API key của nhà cung cấp. |
+| Chất lượng Agent và token | Chưa có kết quả LLM thật để công bố Decision Accuracy, Correct Refusal, Evidence Coverage, Faithfulness hoặc token usage thực tế. |
+| Chạy từ môi trường mới | Đã sao chép file và tạo venv; cài dependency thất bại vì package index của môi trường không tìm được `mcp>=2,<3`. Chưa xác nhận cold start hoàn chỉnh. |
+| Stdio ngày cuối | Bị chặn do event loop/socket của môi trường; smoke đạt ở ngày trước không được ghi thành kết quả chạy mới. |
 
-## Day 4
+Retrieval tốt, test theo kịch bản đạt hoặc log ghi file thành công chưa đủ để kết luận Agent trả lời đúng, từ chối đúng và trung thực với nguồn. Những nội dung đó cần đầu ra LLM thật và đánh giá tương ứng.
 
-Ở Day 4, tôi tiếp tục sử dụng ChatGPT để hỗ trợ xây dựng phần Agent Evaluation Infrastructure.
+Bằng chứng chi tiết nằm trong các file tiến độ TV3 từ ngày 13/10 đến 17/10, `evaluation/day7_validation.json` và `docs/final-review-2026-10-17.md`. Tại thời điểm rà soát ngày cuối, `report.docx`, lượt chạy LLM thật và kiểm chứng đầy đủ trên máy nộp bài vẫn chưa hoàn tất; kết nối GitHub bị lỗi nên chưa xác nhận trạng thái remote mới nhất.
 
-ChatGPT hỗ trợ tôi:
+## 7. Trách nhiệm của người thực hiện
 
-- Kiểm tra và giải thích phần ToolRegistry và Dispatcher được tích hợp từ Member 2.
-- Giải thích cách ToolRegistry giới hạn các tool mà Agent được phép gọi.
-- Giải thích cách Dispatcher validate tool name, arguments và xử lý lỗi thành `Error:` observation thay vì làm Agent loop bị crash.
-- Hỗ trợ thiết kế Agent evaluation output contract.
-- Hỗ trợ xây dựng validation cho các field:
-  - `answer`
-  - `decision`
-  - `evidence_refs`
-  - `usage.calls`
-  - `usage.prompt_tokens`
-  - `usage.completion_tokens`
-  - `usage.max_prompt`
-- Hỗ trợ phân biệt `NO_ANSWER` và `NEED_MORE_INFO`.
-- Hỗ trợ xây dựng các per-case metrics:
-  - Decision Correctness
-  - Correct Refusal
-  - Evidence Coverage
-- Hỗ trợ xây dựng aggregate metrics:
-  - Decision Accuracy
-  - Correct Refusal Rate
-  - Average Evidence Coverage
-  - Total LLM Calls
-  - Prompt Tokens
-  - Completion Tokens
-  - Total Tokens
-  - Average Tokens per Case
-  - Maximum Prompt Size
-- Hỗ trợ viết unit tests cho Agent evaluation contract, per-case metrics và aggregate metrics.
-- Giải thích sự khác nhau giữa Evidence Coverage và Faithfulness.
-- Hỗ trợ viết tài liệu phân tích Day 4 bằng tiếng Việt.
+Tôi khai báo việc sử dụng AI vì AI đã tham gia trực tiếp vào quá trình viết code, sửa lỗi, kiểm thử và soạn tài liệu của phần TV3. Tôi chịu trách nhiệm rà soát nội dung được đưa vào bài nộp, ghi nhận đúng đóng góp của các thành viên và đối chiếu kết luận với bằng chứng thực tế.
 
-Các file Day 4 có sử dụng gợi ý hoặc code được ChatGPT hỗ trợ gồm:
+Trước khi nộp và bảo vệ, tôi cần tự chạy lại các bước còn thiếu trên máy phù hợp, đọc và hiểu thay đổi để giải thích được discovery, schema, xử lý lỗi, kiểm tra bằng chứng, ghi trạng thái và đọc lại. Tài liệu này không xác nhận thay rằng các bước đó đã hoàn thành.
 
-- `evaluation/agent_eval_contract.py`
-- `evaluation/agent_metrics.py`
-- `evaluation/agent_eval_summary.py`
-- `tests/test_agent_eval_contract.py`
-- `tests/test_agent_metrics.py`
-- `tests/test_agent_eval_summary.py`
-- `evaluation/day4_analysis.txt`
-
-Trong Day 4, các Agent output được sử dụng trong unit tests là synthetic outputs.
-
-Các synthetic outputs này chỉ được dùng để kiểm tra correctness của evaluation logic và metric formulas.
-
-Tôi không sử dụng các synthetic outputs này để công bố final Agent performance.
-
-Hiện tại các metric như Decision Accuracy, Correct Refusal Rate, Agent Evidence Coverage, Faithfulness và real token usage chỉ có thể được tính chính xác sau khi Agent end-to-end cung cấp real output và usage information.
-
-Một số prompt chính tôi đã sử dụng với ChatGPT trong Day 4 gồm:
-
-- "Giải thích ToolRegistry và Dispatcher để tôi có thể bảo vệ."
-- "Giúp tôi thiết kế Agent evaluation output contract."
-- "Giải thích sự khác nhau giữa NO_ANSWER và NEED_MORE_INFO."
-- "Giúp tôi xây dựng Decision Correctness, Correct Refusal và Evidence Coverage."
-- "Giúp tôi tổng hợp Decision Accuracy, Correct Refusal Rate và token usage."
-- "Giải thích vì sao Evidence Coverage không phải Faithfulness."
-- "Hỗ trợ viết unit tests cho Agent evaluation metrics."
-
-## Cam kết
-
-Tôi có sử dụng AI để hỗ trợ trong quá trình làm project, chủ yếu để học, giải thích code, gợi ý cách triển khai và hỗ trợ debug.
-
-Tôi đã chạy và kiểm tra lại các phần code được AI hỗ trợ, đồng thời học lại lý thuyết liên quan để có thể giải thích và sửa code trực tiếp trong buổi bảo vệ.
-
-## 2026-10-14 preflight fixes (AI-assisted)
-
-At the user's request, Codex reviewed and edited the claim model, deterministic
-business rules, synthetic fixtures, regression tests and related documentation.
-The fixes cover strict boolean/amount validation, daily and nightly allocations,
-transportation purpose/upgrade approval checks, and invalid or empty claims.
-
-Codex ran 32 standard-library regression tests successfully. The full pytest
-suite, MCP stdio transport and real embedding model were not verified in this
-restricted environment. These are automated checks, not a claim that the student
-has already reviewed or manually verified the new implementation.
-
-
-## TV3 merge preparation review (14 October task, reviewed 15 October)
-
-Codex helped compare the current implementation with the supplied TV3 merge
-guide, finish package/tool-name replacements, align decisions with ClaimStatus,
-normalize Error: responses, update regression tests, and correct progress notes.
-
-Verification performed by Codex in the project environment: 75 pytest tests and
-71 subtests passed; real subprocess smoke_stdio completed with stdio OK; the
-existing search smoke passed with deterministic embeddings. A real-embedding
-demo timed out after 45 seconds, so no success or new retrieval metric is claimed
-for it. The TV1 Day 1 progress file was compared with its remote-branch version.
-These are automated checks; the student still needs to understand the changes
-and rerun the merge checkpoint after TV1 is in main.
-
-
-## TV3 Day 4 MCP registry integration (2026-10-15)
-
-Codex assisted with merging main after TV1, connecting MCP claim tools to TV2's
-existing registry/dispatcher, the async JSON/Error: client adapter, registered
-claim audit preview, tests and handoff documentation. TV2's registry and dispatcher
-were reused without edits. The full pytest suite passed 146 tests and 71 subtests.
-Real stdio registry smoke, the existing claim smoke and deterministic search smoke
-passed. The in-process integration test controls retrieval candidates; it does not
-establish real embedding quality or a completed LLM Agent run. No claim-state
-write, real-model evaluation, push or PR was performed in this session.
-
-
-## TV3 Day 4 supplemental plan implementation
-
-Codex assisted with the MCP-to-LLM schema/result adapters, a synchronous worker-
-thread McpToolbox, discovery caching, LocalToolbox compatibility, full raw-history
-retention and clean shutdown. The new tests include a real dynamic MCP server,
-raw stdout JSON-RPC inspection and a crashing subprocess. The complete suite
-passed 177 tests and 71 subtests; smoke_adapter completed with adapter stdio OK
-and saved actual schemas/results to evaluation/day4_adapter_smoke.json.
-
-No TV2 approval date, completed LLM integration, canonical TV1 provenance module,
-real embedding quality, remote push or PR is claimed by this supplement. The
-prepared handoff identifies those owner confirmations and Day 5 work explicitly.
-
-## TV3 2026-10-16
-
-AI assisted with comparing the revised assignment against GitHub main/member3-mcp,
-implementing the missing MCP write boundary using the existing TV2 StateStore and rules,
-adding isolated write/read-back demo logging, regression tests, Makefile and setup docs.
-No LLM provider was invented. Deterministic integration runs record zero LLM usage and
-are explicitly excluded from final Agent evaluation. Human review/defense remains needed.
-
-## TV3 final-day review — 2026-10-17
-
-At the user's request, Codex read the final-day assignment and official requirements,
-reviewed integration code, and merged the already-fetched TV2 final branch while
-preserving its commits/authorship. Main prompt: analyze the supplied files and
-perform the 17 October task, using the group GitHub when necessary.
-
-AI-generated/edited material in this pass: scripts/demo_agent_mcp.py,
-tests/test_agent_mcp_contract.py, README.md, Makefile, .env.example, final review,
-TV3 progress and validation JSON, plus MCP/architecture handoff updates.
-The runner connects the existing real provider/manual Agent to dynamic MCP tools;
-its additional boundary gate rejects citations not actually retrieved in that run.
-No provider key, synthetic final answer, fabricated metric or student review
-confirmation was supplied by AI.
-
-Codex measured 236 passing tests and 71 passing subtests in a host-compatible
-selection; 21 event-loop/transport checks were excluded from that invocation and
-are NOT claimed as passed. A real cached MiniLM evaluation rerun reproduced
-Dense 100%/100% and Hybrid 100%/95.45% Hit@3/Recall@3. Existing three deterministic
-integration logs retain zero LLM usage. There is no new real provider run.
-
-Cold-start copy and venv creation succeeded, but installing MCP failed in the
-available package index. Full pytest/stdin-stdout acceptance, actual provider
-outputs, report assembly and remote review remain necessary. These are automated
-checks and code assistance; the student must understand and defend the changes.
+Các kết quả chưa đo được phải được ghi là chưa đo; dữ liệu kiểm thử theo kịch bản phải được ghi rõ nguồn; không dùng kết quả retrieval hoặc demo không gọi LLM để thay thế đánh giá Agent thật.
