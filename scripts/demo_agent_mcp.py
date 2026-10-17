@@ -12,6 +12,8 @@ import sys
 import tempfile
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
@@ -95,9 +97,12 @@ def main() -> int:
     parser.add_argument("--log", type=Path, default=ROOT / "logs/agent_mcp.jsonl")
     parser.add_argument("--max-steps", type=int, default=16)
     args = parser.parse_args()
+    # Resolve from the project root even when launched from another directory.
+    # Explicit shell variables take precedence over values in the local file.
+    load_dotenv(ROOT / ".env", override=False, encoding="utf-8-sig")
     config = LLMConfig.from_env()
     if not config.api_key:
-        print("Error: export GROQ_API_KEY (or LLM_API_KEY) before the real Agent demo.", file=sys.stderr)
+        print("Error: set GROQ_API_KEY (or LLM_API_KEY) in the environment or project .env file.", file=sys.stderr)
         return 2
     if not 1 <= args.max_steps <= 32:
         parser.error("--max-steps must be between 1 and 32")
