@@ -250,3 +250,45 @@ Một số prompt chính tôi đã sử dụng với ChatGPT trong Day 4 gồm:
 Tôi có sử dụng AI để hỗ trợ trong quá trình làm project, chủ yếu để học, giải thích code, gợi ý cách triển khai và hỗ trợ debug.
 
 Tôi đã chạy và kiểm tra lại các phần code được AI hỗ trợ, đồng thời học lại lý thuyết liên quan để có thể giải thích và sửa code trực tiếp trong buổi bảo vệ.
+
+
+# Khai báo sử dụng AI — Thành viên 2 (Agent + LLM)
+
+Các phần phía trên là của Thành viên 1 (dùng ChatGPT). Phần này do Thành viên 2 viết; trong phần này "tôi" là Thành viên 2.
+
+Công cụ AI đã sử dụng
+
+Tôi dùng Claude (trợ lý chat của Anthropic) để hỗ trợ viết code, debug và soạn ghi chú tiến độ. Model chạy agent thật trong các log là qwen/qwen3.8-27b trên Groq (một model preview).
+
+# Phần tôi phụ trách
+
+Agent + Business Logic + LLM: vòng lặp agent, evidence gate, ghi quyết định bằng submit_decision rồi đọc lại để verify, call_llm (retry, timeout, ghi log lỗi HTTP) và log usage.
+
+AI đã hỗ trợ những gì
+Công việc	AI làm gì	Tôi làm và kiểm tra thế nào
+Script chạy thật scripts/demo_agent.py	Viết bản nháp, gồm phần đọc .env và chạy mỗi hồ sơ trên một bản sao tạm của claims.json	Tự chạy; kiểm tra git status không bao giờ liệt kê .env
+Sửa src/agent/llm_client.py	Hai thay đổi: thêm header User-Agent trong urllib_transport, và chờ theo gợi ý "try again in Ns" của server khi gặp HTTP 429 (tối đa 60 giây)	Chạy toàn bộ test (135 passed), rồi chạy agent thật
+Debug lần chạy thật đầu tiên	Chẩn đoán lỗi HTTP 403 (Cloudflare, mã 1010), 404 model_not_found, 400 với openai/gpt-oss-120b, 429 do giới hạn token mỗi phút; gợi ý liệt kê model bằng GET /models và dùng qwen/qwen3.8-27b	Tự chạy mọi lệnh trên máy; danh sách model lấy từ key của tôi
+Ghi chú progress/2026-10-17-tv2.md	Soạn bản nháp kết quả chạy thật và các blocker	Số liệu chép từ output terminal các lần chạy của tôi
+Vòng lặp agent, evidence gate, submit_decision và các test Chạy python -m pytest -q (135 passed) và chạy agent thật trên 4 hồ sơ
+Phần AI không làm
+
+AI không chạy các lệnh gọi LLM và không tạo ra log nào. Cả ba file log (logs/agent_run_01.jsonl, 02, 03) đến từ các lần chạy tôi tự thực hiện trên máy. Các số liệu trong report lấy từ những log này.
+
+Những chỗ AI gợi ý chưa đúng
+Ban đầu AI gợi ý llama-3.3-70b-versatile, nhưng key Groq của tôi không truy cập được (HTTP 404). Tôi kiểm tra bằng GET /models và chuyển sang model mà key của tôi dùng được.
+Sau đó AI gợi ý openai/gpt-oss-120b, nhưng model này lỗi HTTP 400 vì cơ chế gọi công cụ riêng của nó xung đột với giao thức JSON-action trong prompt của agent. Không dùng model này.
+Những gì tôi đã tự kiểm tra
+Chạy python -m pytest -q: 135 passed.
+Chạy agent thật với qwen/qwen3.8-27b trên 4 hồ sơ mẫu (CLM-001, CLM-002, CLM-003, CLM-006). Kết quả: APPROVED, ESCALATED, NEED_MORE_INFO, REJECTED; cả 4 đều VERIFY SUCCESS (đọc lại bằng get_claim_status thấy trạng thái khớp).
+Tổng usage lần chạy 01: 21 lần gọi model, 41990 prompt token, 1608 completion token.
+Có ba log thật, nhưng log 02 và 03 chạy lại các hồ sơ của log 01 và cho cùng số token vì temperature=0, nên đó là lần lặp lại, không phải bằng chứng độc lập. Riêng logs/agent_run_02.jsonl chứa hai lần chạy giống hệt nhau của CLM-001 và CLM-006 (19:04 và 19:15), cả hai đều thành công.
+Hạn chế cần nói rõ
+qwen/qwen3.8-27b là model preview, Groq có thể ngừng bất ngờ. Gói free giới hạn 7000 token đầu vào mỗi phút nên một lần chạy 4 hồ sơ mất khoảng 12 phút do chờ.
+VERIFY SUCCESS chỉ cho biết trạng thái đã ghi và đọc lại khớp nhau. Việc quyết định có đúng hay không được đo riêng bởi Thành viên 1 (Decision Accuracy) từ các log này.
+Các tình huống NO_ANSWER, output sai định dạng và MAX_STEPS hiện được kiểm tra bằng unit test với model giả lập, chưa có lần chạy thật với LLM.
+# Cam kết
+
+Tôi có sử dụng AI để hỗ trợ trong quá trình làm project, chủ yếu để học, giải thích code, gợi ý cách triển khai và hỗ trợ debug.
+
+Tôi đã chạy và kiểm tra lại các phần code được AI hỗ trợ, đồng thời học lại lý thuyết liên quan để có thể giải thích và sửa code trực tiếp trong buổi bảo vệ.
