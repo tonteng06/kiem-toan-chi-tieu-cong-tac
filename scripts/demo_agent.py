@@ -3,6 +3,7 @@
     python scripts/demo_agent.py                      # CLM-001 CLM-002 CLM-003 CLM-006
     python scripts/demo_agent.py CLM-002 --log logs/agent_run_01.jsonl
 
+The key is read from the environment or from a .env file in the repo root (never commit .env).
 Each claim runs on a temporary COPY of data/claims/claims.json, so the tracked sample data is never
 changed and the same demo can be repeated. One JSON line per claim is appended to the log (steps,
 tool args/results, verified write, usage). Nothing here is mocked: no key -> the run stops with an error.
@@ -10,6 +11,7 @@ tool args/results, verified write, usage). Nothing here is mocked: no key -> the
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import sys
 import tempfile
@@ -24,6 +26,18 @@ from src.agent.state_store import DEFAULT_PATH, StateStore  # noqa: E402
 from src.agent.tool_registry import build_registry  # noqa: E402
 
 DEFAULT_CLAIMS = ["CLM-001", "CLM-002", "CLM-003", "CLM-006"]
+
+
+def load_env_file(path: Path) -> None:
+    """Read KEY=VALUE lines from a .env file into os.environ (variables already set win). No dependency."""
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8-sig").splitlines():  # utf-8-sig: tolerate a BOM
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
 def question_for(claim_id: str) -> str:
@@ -54,6 +68,7 @@ def main() -> None:
     parser.add_argument("claims", nargs="*", default=DEFAULT_CLAIMS)
     parser.add_argument("--log", type=Path, default=Path("logs/agent_run.jsonl"))
     args = parser.parse_args()
+    load_env_file(Path(__file__).resolve().parents[1] / ".env")
 
     from src.rag.chunker import chunk_documents
     from src.rag.loader import load_documents
