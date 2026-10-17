@@ -8,10 +8,6 @@
 
 Trong quá trình thực hiện project, tôi sử dụng ChatGPT và Codex của OpenAI để hỗ trợ tìm hiểu kiến thức, giải thích mã nguồn, đề xuất cách triển khai, viết và sửa code, kiểm thử, rà soát lỗi tích hợp và soạn tài liệu.
 
-Codex còn trực tiếp thao tác trên bản repository được cung cấp: chỉnh sửa file, chạy lệnh kiểm tra, tích hợp các nhánh đã có và tạo một số commit theo yêu cầu. Vì vậy, mức độ hỗ trợ của AI bao gồm cả tạo và sửa code trực tiếp, không chỉ giải thích hoặc gợi ý.
-
-Tài liệu này tham khảo bố cục `ai-usage.md` của Thành viên 1 trên nhánh `origin/member1-final-eval`: công cụ sử dụng, phạm vi phụ trách, nội dung theo ngày, yêu cầu chính, file liên quan và cách kiểm chứng. Nội dung dưới đây khai báo phần Thành viên 3; phần Data, RAG và Evaluation vẫn được ghi nhận là đóng góp của Thành viên 1.
-
 ## 2. Phần tôi phụ trách
 
 Tôi phụ trách lớp MCP và kết nối các thành phần của nhóm, gồm:
@@ -55,8 +51,6 @@ AI hỗ trợ triển khai `submit_decision` dựa trên `StateStore` và quy t�
 AI hỗ trợ tạo demo trên bản sao trạng thái, gọi ghi rồi đọc lại ngay, đối chiếu trạng thái, lý do, thời điểm cập nhật và dữ liệu JSON thực tế. Ba log `logs/run_01.jsonl` đến `logs/run_03.jsonl` ghi nhận retrieval thật bằng MiniLM và thao tác MCP/lưu trạng thái thật. Quyết định trong các demo dựa trên quy tắc xác định; số lượt gọi và token LLM bằng 0.
 
 AI hỗ trợ bổ sung Makefile, hướng dẫn thiết lập, `.env.example`, tài liệu bàn giao và cấu hình truyền cho subprocess. Theo tiến độ đã lưu, pytest đạt 218 tests và 71 subtests tại checkpoint này; các smoke stdio và ghi/đọc lại cũng đạt. Các kết quả này thuộc lần chạy ngày 16/10, không thay cho kiểm chứng lại ở ngày cuối.
-
-Một số commit được Codex tạo trực tiếp trong bản làm việc theo yêu cầu hỗ trợ Git. Lịch sử Git phản ánh identity tại thời điểm tạo commit; khai báo này ghi rõ AI đã tham gia triển khai và thao tác repository.
 
 ### Ngày 17/10 — Rà soát cuối và kết nối Agent với MCP
 
