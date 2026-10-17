@@ -115,3 +115,171 @@ Tôi khai báo việc sử dụng AI vì AI đã tham gia trực tiếp vào qu�
 Trước khi nộp và bảo vệ, tôi cần tự chạy lại các bước còn thiếu trên máy phù hợp, đọc và hiểu thay đổi để giải thích được discovery, schema, xử lý lỗi, kiểm tra bằng chứng, ghi trạng thái và đọc lại. Tài liệu này không xác nhận thay rằng các bước đó đã hoàn thành.
 
 Các kết quả chưa đo được phải được ghi là chưa đo; dữ liệu kiểm thử theo kịch bản phải được ghi rõ nguồn; không dùng kết quả retrieval hoặc demo không gọi LLM để thay thế đánh giá Agent thật.
+Một số prompt chính tôi đã sử dụng trong quá trình làm phần của mình:
+
+- "Hướng dẫn tôi làm phần Data + RAG + Evaluation từng bước."
+- "Giải thích Dense Search, BM25 và Hybrid Search để tôi có thể hiểu và bảo vệ."
+- "Giải thích cách tính Hit@3 và Recall@3."
+- "Phân tích vì sao Hybrid Search không lấy được DOC007 trong Q13."
+- "Giúp tôi kiểm tra trường hợp multi-policy và policy version ở Q14, Q15."
+- "Hỗ trợ xây dựng claim-to-policy grounding evaluation và phân biệt nó với LLM faithfulness."
+
+Các phần có đoạn code được ChatGPT gợi ý hoặc tạo bản nháp trực tiếp gồm:
+
+- `src/models/document.py`
+- `src/rag/loader.py`
+- `src/rag/chunker.py`
+- `src/rag/embeddings.py`
+- `src/rag/dense_search.py`
+- `src/rag/bm25_search.py`
+- `src/rag/hybrid_search.py`
+- `src/rag/retriever.py`
+- `evaluation/evaluate_retrieval.py`
+- `evaluation/day2_reasoning_analysis.py`
+- `evaluation/evaluate_claim_grounding.py`
+
+Tôi không xem các đoạn code AI tạo ra là kết quả cuối cùng ngay lập tức. Tôi đã trực tiếp chạy code, kiểm tra output, đối chiếu với policy corpus và chỉnh lại khi cần trước khi đưa vào project.
+
+## Những gì tôi đã tự kiểm tra
+
+Tôi đã trực tiếp chạy code trên máy và kiểm tra các phần sau:
+
+- Load đủ 8 policy document.
+- Kiểm tra metadata của document.
+- Kiểm tra kết quả chunking.
+- Kiểm tra embedding có 384 chiều.
+- Chạy Dense Search.
+- Chạy BM25 Search.
+- Chạy Hybrid Search.
+- Kiểm tra Retriever với hai mode Dense và Hybrid.
+- Chạy bộ test 15 câu.
+- Xác nhận testset có 4 câu no-answer và quan sát Retriever vẫn trả về các document gần nhất. Tôi chưa đánh giá correct refusal ở Agent layer vì Agent end-to-end chưa có output.
+- Chạy evaluation Dense và Hybrid.
+- Phân tích Q13, Q14 và các trường hợp multi-policy.
+
+Kết quả Day 1 hiện tại:
+
+Dense:
+
+- Hit@3: 100%
+- Recall@3: 100%
+
+Hybrid:
+
+- Hit@3: 100%
+- Recall@3: 95.45%
+
+Tôi cũng giữ lại Q13 là một trường hợp retrieval chưa tốt của Hybrid để phân tích, thay vì chỉnh kết quả chỉ để metric đẹp hơn.
+
+## Day 4
+
+Ở Day 4, tôi tiếp tục sử dụng ChatGPT để hỗ trợ xây dựng phần Agent Evaluation Infrastructure.
+
+ChatGPT hỗ trợ tôi:
+
+- Kiểm tra và giải thích phần ToolRegistry và Dispatcher được tích hợp từ Member 2.
+- Giải thích cách ToolRegistry giới hạn các tool mà Agent được phép gọi.
+- Giải thích cách Dispatcher validate tool name, arguments và xử lý lỗi thành `Error:` observation thay vì làm Agent loop bị crash.
+- Hỗ trợ thiết kế Agent evaluation output contract.
+- Hỗ trợ xây dựng validation cho các field:
+  - `answer`
+  - `decision`
+  - `evidence_refs`
+  - `usage.calls`
+  - `usage.prompt_tokens`
+  - `usage.completion_tokens`
+  - `usage.max_prompt`
+- Hỗ trợ phân biệt `NO_ANSWER` và `NEED_MORE_INFO`.
+- Hỗ trợ xây dựng các per-case metrics:
+  - Decision Correctness
+  - Correct Refusal
+  - Evidence Coverage
+- Hỗ trợ xây dựng aggregate metrics:
+  - Decision Accuracy
+  - Correct Refusal Rate
+  - Average Evidence Coverage
+  - Total LLM Calls
+  - Prompt Tokens
+  - Completion Tokens
+  - Total Tokens
+  - Average Tokens per Case
+  - Maximum Prompt Size
+- Hỗ trợ viết unit tests cho Agent evaluation contract, per-case metrics và aggregate metrics.
+- Giải thích sự khác nhau giữa Evidence Coverage và Faithfulness.
+- Hỗ trợ viết tài liệu phân tích Day 4 bằng tiếng Việt.
+
+Các file Day 4 có sử dụng gợi ý hoặc code được ChatGPT hỗ trợ gồm:
+
+- `evaluation/agent_eval_contract.py`
+- `evaluation/agent_metrics.py`
+- `evaluation/agent_eval_summary.py`
+- `tests/test_agent_eval_contract.py`
+- `tests/test_agent_metrics.py`
+- `tests/test_agent_eval_summary.py`
+- `evaluation/day4_analysis.txt`
+
+Trong Day 4, các Agent output được sử dụng trong unit tests là synthetic outputs.
+
+Các synthetic outputs này chỉ được dùng để kiểm tra correctness của evaluation logic và metric formulas.
+
+Tôi không sử dụng các synthetic outputs này để công bố final Agent performance.
+
+Hiện tại các metric như Decision Accuracy, Correct Refusal Rate, Agent Evidence Coverage, Faithfulness và real token usage chỉ có thể được tính chính xác sau khi Agent end-to-end cung cấp real output và usage information.
+
+Một số prompt chính tôi đã sử dụng với ChatGPT trong Day 4 gồm:
+
+- "Giải thích ToolRegistry và Dispatcher để tôi có thể bảo vệ."
+- "Giúp tôi thiết kế Agent evaluation output contract."
+- "Giải thích sự khác nhau giữa NO_ANSWER và NEED_MORE_INFO."
+- "Giúp tôi xây dựng Decision Correctness, Correct Refusal và Evidence Coverage."
+- "Giúp tôi tổng hợp Decision Accuracy, Correct Refusal Rate và token usage."
+- "Giải thích vì sao Evidence Coverage không phải Faithfulness."
+- "Hỗ trợ viết unit tests cho Agent evaluation metrics."
+
+## Cam kết
+
+Tôi có sử dụng AI để hỗ trợ trong quá trình làm project, chủ yếu để học, giải thích code, gợi ý cách triển khai và hỗ trợ debug.
+
+Tôi đã chạy và kiểm tra lại các phần code được AI hỗ trợ, đồng thời học lại lý thuyết liên quan để có thể giải thích và sửa code trực tiếp trong buổi bảo vệ.
+
+
+# Khai báo sử dụng AI — Thành viên 2 (Agent + LLM)
+
+Các phần phía trên là của Thành viên 1 (dùng ChatGPT). Phần này do Thành viên 2 viết; trong phần này "tôi" là Thành viên 2.
+
+Công cụ AI đã sử dụng
+
+Tôi dùng Claude (trợ lý chat của Anthropic) để hỗ trợ viết code, debug và soạn ghi chú tiến độ. Model chạy agent thật trong các log là qwen/qwen3.8-27b trên Groq (một model preview).
+
+# Phần tôi phụ trách
+
+Agent + Business Logic + LLM: vòng lặp agent, evidence gate, ghi quyết định bằng submit_decision rồi đọc lại để verify, call_llm (retry, timeout, ghi log lỗi HTTP) và log usage.
+
+AI đã hỗ trợ những gì
+Công việc	AI làm gì	Tôi làm và kiểm tra thế nào
+Script chạy thật scripts/demo_agent.py	Viết bản nháp, gồm phần đọc .env và chạy mỗi hồ sơ trên một bản sao tạm của claims.json	Tự chạy; kiểm tra git status không bao giờ liệt kê .env
+Sửa src/agent/llm_client.py	Hai thay đổi: thêm header User-Agent trong urllib_transport, và chờ theo gợi ý "try again in Ns" của server khi gặp HTTP 429 (tối đa 60 giây)	Chạy toàn bộ test (135 passed), rồi chạy agent thật
+Debug lần chạy thật đầu tiên	Chẩn đoán lỗi HTTP 403 (Cloudflare, mã 1010), 404 model_not_found, 400 với openai/gpt-oss-120b, 429 do giới hạn token mỗi phút; gợi ý liệt kê model bằng GET /models và dùng qwen/qwen3.8-27b	Tự chạy mọi lệnh trên máy; danh sách model lấy từ key của tôi
+Ghi chú progress/2026-10-17-tv2.md	Soạn bản nháp kết quả chạy thật và các blocker	Số liệu chép từ output terminal các lần chạy của tôi
+Vòng lặp agent, evidence gate, submit_decision và các test Chạy python -m pytest -q (135 passed) và chạy agent thật trên 4 hồ sơ
+Phần AI không làm
+
+AI không chạy các lệnh gọi LLM và không tạo ra log nào. Cả ba file log (logs/agent_run_01.jsonl, 02, 03) đến từ các lần chạy tôi tự thực hiện trên máy. Các số liệu trong report lấy từ những log này.
+
+Những chỗ AI gợi ý chưa đúng
+Ban đầu AI gợi ý llama-3.3-70b-versatile, nhưng key Groq của tôi không truy cập được (HTTP 404). Tôi kiểm tra bằng GET /models và chuyển sang model mà key của tôi dùng được.
+Sau đó AI gợi ý openai/gpt-oss-120b, nhưng model này lỗi HTTP 400 vì cơ chế gọi công cụ riêng của nó xung đột với giao thức JSON-action trong prompt của agent. Không dùng model này.
+Những gì tôi đã tự kiểm tra
+Chạy python -m pytest -q: 135 passed.
+Chạy agent thật với qwen/qwen3.8-27b trên 4 hồ sơ mẫu (CLM-001, CLM-002, CLM-003, CLM-006). Kết quả: APPROVED, ESCALATED, NEED_MORE_INFO, REJECTED; cả 4 đều VERIFY SUCCESS (đọc lại bằng get_claim_status thấy trạng thái khớp).
+Tổng usage lần chạy 01: 21 lần gọi model, 41990 prompt token, 1608 completion token.
+Có ba log thật, nhưng log 02 và 03 chạy lại các hồ sơ của log 01 và cho cùng số token vì temperature=0, nên đó là lần lặp lại, không phải bằng chứng độc lập. Riêng logs/agent_run_02.jsonl chứa hai lần chạy giống hệt nhau của CLM-001 và CLM-006 (19:04 và 19:15), cả hai đều thành công.
+Hạn chế cần nói rõ
+qwen/qwen3.8-27b là model preview, Groq có thể ngừng bất ngờ. Gói free giới hạn 7000 token đầu vào mỗi phút nên một lần chạy 4 hồ sơ mất khoảng 12 phút do chờ.
+VERIFY SUCCESS chỉ cho biết trạng thái đã ghi và đọc lại khớp nhau. Việc quyết định có đúng hay không được đo riêng bởi Thành viên 1 (Decision Accuracy) từ các log này.
+Các tình huống NO_ANSWER, output sai định dạng và MAX_STEPS hiện được kiểm tra bằng unit test với model giả lập, chưa có lần chạy thật với LLM.
+# Cam kết
+
+Tôi có sử dụng AI để hỗ trợ trong quá trình làm project, chủ yếu để học, giải thích code, gợi ý cách triển khai và hỗ trợ debug.
+
+Tôi đã chạy và kiểm tra lại các phần code được AI hỗ trợ, đồng thời học lại lý thuyết liên quan để có thể giải thích và sửa code trực tiếp trong buổi bảo vệ.
