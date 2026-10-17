@@ -9,7 +9,8 @@ new dependency is needed. Configuration comes from the environment (never from c
     LLM_TIMEOUT    seconds per request, default 30
     LLM_MAX_RETRIES  default 3 (attempts = 1 + retries)
 
-Retried: timeouts, connection errors, HTTP 408/429/5xx (exponential backoff 1s, 2s, 4s ...).
+Retried: timeouts, connection errors, HTTP 408/429/5xx (exponential backoff 1s, 2s, 4s ...; on a 429
+the wait is at least the "try again in Ns" hint from the server, capped at 60s).
 Not retried: other 4xx (bad request, bad key, ...) and a missing key; retrying cannot fix them.
 Every failure raises LLMError; `run_agent` turns that into a clean `llm_error` stop. The API key is
 never logged. There is NO silent fallback to a fake model: without a key or after a failure the call
@@ -22,6 +23,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import socket
 import time
 import urllib.error
@@ -34,6 +36,20 @@ from src.agent.agent import LLM, ModelReply
 logger = logging.getLogger("agent.llm")
 
 RETRY_STATUS = {408, 429, 500, 502, 503, 504}
+MAX_WAIT = 60.0  # never sleep longer than this between attempts
+_RATE_HINT = re.compile(r"try again in ([\d.]+)\s*(ms|s)\b")
+
+
+def _retry_hint(text: str) -> float | None:
+    """Seconds the server asks us to wait ("Please try again in 18.9s" / "608ms"), or None."""
+    match = _RATE_HINT.search(text)
+    if not match:
+        return None
+    try:
+        value = float(match.group(1))
+    except ValueError:
+        return None
+    return value / 1000 if match.group(2) == "ms" else value
 
 
 class LLMError(Exception):
@@ -67,6 +83,7 @@ Transport = Callable[[str, dict, bytes, float], tuple[int, str]]
 
 
 def urllib_transport(url: str, headers: dict, body: bytes, timeout: float) -> tuple[int, str]:
+    headers = {"User-Agent": "kiem-toan-agent/1.0", **headers}  # Cloudflare blocks the default Python-urllib agent (error 1010)
     request = urllib.request.Request(url, data=body, headers=headers, method="POST")
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -110,6 +127,7 @@ def call_llm(
     attempts = config.max_retries + 1
     for attempt in range(1, attempts + 1):
         reason = ""
+        hint: float | None = None
         try:
             status, text = transport(url, headers, body, config.timeout)
         except (OSError, TimeoutError) as exc:  # includes socket errors and timeouts
@@ -122,8 +140,13 @@ def call_llm(
             logger.error("LLM HTTP error %d (attempt %d/%d): %s", status, attempt, attempts, text[:300])
             if status not in RETRY_STATUS:
                 raise LLMError(f"{reason} (not retryable): {text[:200]}")
+            if status == 429:
+                hint = _retry_hint(text)
         if attempt < attempts:
-            sleep(2 ** (attempt - 1))
+            delay = float(2 ** (attempt - 1))
+            if hint is not None:  # rate limit: wait as long as the server says (plus a small margin)
+                delay = max(delay, hint + 1.0)
+            sleep(min(delay, MAX_WAIT))
     raise LLMError(f"gave up after {attempts} attempts: {reason}")
 
 
