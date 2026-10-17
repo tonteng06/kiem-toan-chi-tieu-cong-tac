@@ -14,21 +14,54 @@
         "amount": 2700000,
         "expense_date": "2026-09-08",
         "description": "3 dem khach san",
-        "has_receipt": true
+        "has_receipt": true,
+        "allocations": [
+          {
+            "expense_date": "2026-09-08",
+            "amount": 900000
+          },
+          {
+            "expense_date": "2026-09-09",
+            "amount": 900000
+          },
+          {
+            "expense_date": "2026-09-10",
+            "amount": 900000
+          }
+        ]
       },
       {
         "category": "meal",
         "amount": 900000,
         "expense_date": "2026-09-09",
         "description": "An uong 4 ngay",
-        "has_receipt": true
+        "has_receipt": true,
+        "allocations": [
+          {
+            "expense_date": "2026-09-08",
+            "amount": 225000
+          },
+          {
+            "expense_date": "2026-09-09",
+            "amount": 225000
+          },
+          {
+            "expense_date": "2026-09-10",
+            "amount": 225000
+          },
+          {
+            "expense_date": "2026-09-11",
+            "amount": 225000
+          }
+        ]
       },
       {
         "category": "transport",
         "amount": 450000,
         "expense_date": "2026-09-09",
         "description": "Taxi san bay",
-        "has_receipt": true
+        "has_receipt": true,
+        "business_purpose": "Gap khach hang tai Ha Noi"
       }
     ],
     "status": "SUBMITTED"
@@ -48,14 +81,38 @@
         "amount": 9600000,
         "expense_date": "2026-09-15",
         "description": "2 dem resort 5 sao",
-        "has_receipt": true
+        "has_receipt": true,
+        "allocations": [
+          {
+            "expense_date": "2026-09-15",
+            "amount": 4800000
+          },
+          {
+            "expense_date": "2026-09-16",
+            "amount": 4800000
+          }
+        ]
       },
       {
         "category": "meal",
         "amount": 700000,
         "expense_date": "2026-09-16",
         "description": "An uong 3 ngay",
-        "has_receipt": true
+        "has_receipt": true,
+        "allocations": [
+          {
+            "expense_date": "2026-09-15",
+            "amount": 233334
+          },
+          {
+            "expense_date": "2026-09-16",
+            "amount": 233333
+          },
+          {
+            "expense_date": "2026-09-17",
+            "amount": 233333
+          }
+        ]
       }
     ],
     "status": "SUBMITTED"
@@ -75,21 +132,46 @@
         "amount": 2400000,
         "expense_date": "2026-09-20",
         "description": "2 dem khach san",
-        "has_receipt": false
+        "has_receipt": false,
+        "allocations": [
+          {
+            "expense_date": "2026-09-20",
+            "amount": 1200000
+          },
+          {
+            "expense_date": "2026-09-21",
+            "amount": 1200000
+          }
+        ]
       },
       {
         "category": "meal",
         "amount": 600000,
         "expense_date": "2026-09-21",
         "description": "An uong 3 ngay",
-        "has_receipt": true
+        "has_receipt": true,
+        "allocations": [
+          {
+            "expense_date": "2026-09-20",
+            "amount": 200000
+          },
+          {
+            "expense_date": "2026-09-21",
+            "amount": 200000
+          },
+          {
+            "expense_date": "2026-09-22",
+            "amount": 200000
+          }
+        ]
       },
       {
         "category": "transport",
         "amount": 800000,
         "expense_date": "2026-09-21",
         "description": "Xe di chuyen",
-        "has_receipt": true
+        "has_receipt": true,
+        "business_purpose": "Khao sat chi nhanh"
       }
     ],
     "status": "SUBMITTED"
@@ -109,14 +191,46 @@
         "amount": 12000000,
         "expense_date": "2026-09-25",
         "description": "3 dem khach san",
-        "has_receipt": true
+        "has_receipt": true,
+        "allocations": [
+          {
+            "expense_date": "2026-09-25",
+            "amount": 4000000
+          },
+          {
+            "expense_date": "2026-09-26",
+            "amount": 4000000
+          },
+          {
+            "expense_date": "2026-09-27",
+            "amount": 4000000
+          }
+        ]
       },
       {
         "category": "meal",
         "amount": 3000000,
         "expense_date": "2026-09-26",
         "description": "An uong 4 ngay",
-        "has_receipt": true
+        "has_receipt": true,
+        "allocations": [
+          {
+            "expense_date": "2026-09-25",
+            "amount": 750000
+          },
+          {
+            "expense_date": "2026-09-26",
+            "amount": 750000
+          },
+          {
+            "expense_date": "2026-09-27",
+            "amount": 750000
+          },
+          {
+            "expense_date": "2026-09-28",
+            "amount": 750000
+          }
+        ]
       }
     ],
     "prior_approval": true,
@@ -137,7 +251,17 @@
         "amount": 1800000,
         "expense_date": "2026-08-01",
         "description": "2 dem khach san",
-        "has_receipt": true
+        "has_receipt": true,
+        "allocations": [
+          {
+            "expense_date": "2026-08-01",
+            "amount": 900000
+          },
+          {
+            "expense_date": "2026-08-02",
+            "amount": 900000
+          }
+        ]
       }
     ],
     "status": "APPROVED",
@@ -179,17 +303,40 @@
         "amount": 3000000,
         "expense_date": "2026-09-28",
         "description": "2 dem khach san",
-        "has_receipt": true
+        "has_receipt": true,
+        "allocations": [
+          {
+            "expense_date": "2026-09-28",
+            "amount": 1500000
+          },
+          {
+            "expense_date": "2026-09-29",
+            "amount": 1500000
+          }
+        ]
       },
       {
         "category": "meal",
         "amount": 900000,
         "expense_date": "2026-09-29",
         "description": "An uong 3 ngay",
-        "has_receipt": true
+        "has_receipt": true,
+        "allocations": [
+          {
+            "expense_date": "2026-09-28",
+            "amount": 300000
+          },
+          {
+            "expense_date": "2026-09-29",
+            "amount": 300000
+          },
+          {
+            "expense_date": "2026-09-30",
+            "amount": 300000
+          }
+        ]
       }
     ],
     "status": "SUBMITTED"
   }
 ]
-

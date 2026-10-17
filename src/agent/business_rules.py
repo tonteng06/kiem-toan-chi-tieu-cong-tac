@@ -9,11 +9,14 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections import defaultdict
+from datetime import date
 
 from src.models.claim import Claim, ClaimStatus
 
 HOTEL_REF, MEAL_REF = "DOC003@v1.0", "DOC004@v1.0"
 RECEIPT_REF, DEADLINE_REF, INTL_REF = "DOC006@v1.0", "DOC002@v2.0", "DOC008@v1.0"
+TRANSPORT_REF = "DOC005@v1.0"
 
 HOTEL_LIMITS = {  # VND per night, keys normalised (no accents, no spaces)
     "hochiminhcity": 2_000_000, "hochiminh": 2_000_000, "hanoi": 2_000_000, "danang": 1_500_000,
@@ -38,6 +41,8 @@ def _issue(code: str, message: str, outcome: ClaimStatus, evidence: str) -> dict
 
 
 def calculate_claim(claim: Claim) -> dict:
+    # Dataclasses are mutable: validate again before making a recommendation.
+    claim.__post_init__()
     totals = claim.total_by_category()
     total = sum(totals.values())
     violations: list[dict] = []
@@ -50,9 +55,14 @@ def calculate_claim(claim: Claim) -> dict:
                 f"Alcoholic beverages are not reimbursable: '{e.description}' ({e.amount:,} VND)",
                 ClaimStatus.REJECTED, MEAL_REF))
 
+    daily: dict[str, dict[date, int]] = {"hotel": defaultdict(int), "meal": defaultdict(int)}
+    for expense in claim.expenses:
+        if expense.category in daily:
+            for allocation in expense.daily_amounts():
+                daily[expense.category][allocation.expense_date] += allocation.amount
+
     hotel = totals.get("hotel", 0)
     if hotel:
-        per_night = hotel / max(claim.nights, 1)
         if claim.is_international:
             missing.append(_issue(
                 "NO_HOTEL_POLICY",
@@ -60,21 +70,39 @@ def calculate_claim(claim: Claim) -> dict:
                 ClaimStatus.ESCALATED, INTL_REF))
         else:
             limit = HOTEL_LIMITS.get(_norm(claim.city).replace(" ", ""), HOTEL_OTHER_DOMESTIC)
-            if per_night > limit:
-                violations.append(_issue(
-                    "HOTEL_OVER_LIMIT",
-                    f"Hotel {per_night:,.0f} VND/night exceeds the {limit:,} VND limit for {claim.city}",
-                    ClaimStatus.ESCALATED, HOTEL_REF))
+            for night, amount in sorted(daily["hotel"].items()):
+                if amount > limit:
+                    violations.append(_issue(
+                        "HOTEL_OVER_LIMIT",
+                        f"Hotel {amount:,} VND on {night} exceeds the {limit:,} VND nightly limit for {claim.city}",
+                        ClaimStatus.ESCALATED, HOTEL_REF))
 
     meal = totals.get("meal", 0)
     if meal:
-        per_day = meal / claim.days
         limit = MEAL_LIMIT_INTERNATIONAL if claim.is_international else MEAL_LIMIT_DOMESTIC
-        if per_day > limit:
+        for day, amount in sorted(daily["meal"].items()):
+            if amount > limit:
+                violations.append(_issue(
+                    "MEAL_OVER_LIMIT",
+                    f"Meals {amount:,} VND on {day} exceed the {limit:,} VND daily allowance",
+                    ClaimStatus.ESCALATED, MEAL_REF))
+
+    for expense in claim.expenses:
+        if expense.category != "transport":
+            continue
+        if not expense.business_purpose.strip():
+            missing.append(_issue(
+                "MISSING_TRANSPORT_PURPOSE", "Record the business purpose of the transportation expense",
+                ClaimStatus.NEED_MORE_INFO, TRANSPORT_REF))
+        # Structured input is authoritative; also catch explicit legacy descriptions.
+        description = _norm(expense.description)
+        luxury = expense.is_luxury_upgrade or any(
+            phrase in description for phrase in ("luxury vehicle upgrade", "luxury upgrade", "nang cap xe sang")
+        )
+        if luxury and not expense.prior_approval:
             violations.append(_issue(
-                "MEAL_OVER_LIMIT",
-                f"Meals {per_day:,.0f} VND/day exceed the {limit:,} VND daily allowance",
-                ClaimStatus.ESCALATED, MEAL_REF))
+                "UNAPPROVED_LUXURY_UPGRADE", "Luxury vehicle upgrades require prior approval for the upgrade",
+                ClaimStatus.REJECTED, TRANSPORT_REF))
 
     for e in claim.expenses:  # receipts
         if e.amount >= RECEIPT_THRESHOLD and not e.has_receipt:

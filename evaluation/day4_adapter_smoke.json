@@ -1,0 +1,151 @@
+{
+  "timestamp": "2026-10-15T11:40:32.731779+00:00",
+  "command": "python scripts/smoke_adapter.py",
+  "transport": "real stdio subprocess",
+  "model_required": false,
+  "schemas": [
+    {
+      "name": "search_policy",
+      "description": "Search policy documents and return ranked chunks with source provenance.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "mode": {
+            "default": "hybrid",
+            "enum": [
+              "dense",
+              "hybrid"
+            ],
+            "type": "string"
+          },
+          "top_k": {
+            "default": 3,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "query"
+        ]
+      }
+    },
+    {
+      "name": "get_claim_status",
+      "description": "Read a claim's persisted status and decision metadata.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "claim_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "claim_id"
+        ]
+      }
+    },
+    {
+      "name": "get_claim",
+      "description": "Read a full claim through the shared TV2 tool registry.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "claim_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "claim_id"
+        ]
+      }
+    },
+    {
+      "name": "calculate_claim",
+      "description": "Calculate the recommendation through TV2's registered read-only tool.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "claim_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "claim_id"
+        ]
+      }
+    }
+  ],
+  "calls": [
+    {
+      "timestamp": "2026-10-15T11:40:32.576508+00:00",
+      "tool": "get_claim_status",
+      "args": {
+        "claim_id": "CLM-001"
+      },
+      "raw_result": {
+        "_meta": {
+          "io.modelcontextprotocol/serverInfo": {
+            "name": "travel-expense-audit",
+            "version": ""
+          }
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "{\n  \"claim_id\": \"CLM-001\",\n  \"status\": \"SUBMITTED\",\n  \"decision_reason\": \"\",\n  \"updated_at\": \"\"\n}",
+            "annotations": null,
+            "_meta": null
+          }
+        ],
+        "structuredContent": {
+          "claim_id": "CLM-001",
+          "status": "SUBMITTED",
+          "decision_reason": "",
+          "updated_at": ""
+        },
+        "isError": false,
+        "resultType": "complete"
+      },
+      "observation": "{\"claim_id\": \"CLM-001\", \"status\": \"SUBMITTED\", \"decision_reason\": \"\", \"updated_at\": \"\"}"
+    },
+    {
+      "timestamp": "2026-10-15T11:40:32.579556+00:00",
+      "tool": "get_claim_status",
+      "args": {
+        "claim_id": "CLM-999"
+      },
+      "raw_result": {
+        "_meta": {
+          "io.modelcontextprotocol/serverInfo": {
+            "name": "travel-expense-audit",
+            "version": ""
+          }
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Error executing tool get_claim_status: Error: Claim not found: CLM-999",
+            "annotations": null,
+            "_meta": null
+          }
+        ],
+        "structuredContent": null,
+        "isError": true,
+        "resultType": "complete"
+      },
+      "observation": "Error: Error executing tool get_claim_status: Error: Claim not found: CLM-999"
+    },
+    {
+      "timestamp": "2026-10-15T11:40:32.579556+00:00",
+      "tool": "not_registered",
+      "args": {},
+      "raw_result": null,
+      "observation": "Error: unknown MCP tool 'not_registered'; call refresh() for new tools"
+    }
+  ],
+  "discovery_count": 1,
+  "clean_shutdown": true,
+  "claim_state_unchanged": true
+}
