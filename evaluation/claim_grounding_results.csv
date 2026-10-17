@@ -1,10 +1,12 @@
 mode,claim_id,recommended_status,issue_code,message,expected_ref,retrieved_refs,grounded_at_3
-dense,CLM-002,ESCALATED,HOTEL_OVER_LIMIT,"Hotel 4,800,000 VND/night exceeds the 1,500,000 VND limit for Da Nang",DOC003@v1.0,DOC003@v1.0;DOC004@v1.0;DOC008@v1.0,1
+dense,CLM-002,ESCALATED,HOTEL_OVER_LIMIT,"Hotel 4,800,000 VND on 2026-09-15 exceeds the 1,500,000 VND nightly limit for Da Nang",DOC003@v1.0,DOC003@v1.0;DOC004@v1.0;DOC008@v1.0,1
+dense,CLM-002,ESCALATED,HOTEL_OVER_LIMIT,"Hotel 4,800,000 VND on 2026-09-16 exceeds the 1,500,000 VND nightly limit for Da Nang",DOC003@v1.0,DOC003@v1.0;DOC004@v1.0;DOC008@v1.0,1
 dense,CLM-003,NEED_MORE_INFO,MISSING_RECEIPT,"Receipt required for hotel 2,400,000 VND on 2026-09-20",DOC006@v1.0,DOC006@v1.0;DOC001@v1.0;DOC008@v1.0,1
 dense,CLM-004,ESCALATED,NO_HOTEL_POLICY,No hotel limit is defined for Singapore; a limit must not be invented,DOC008@v1.0,DOC008@v1.0;DOC003@v1.0;DOC007@v1.0,1
 dense,CLM-006,REJECTED,NOT_REIMBURSABLE,"Alcoholic beverages are not reimbursable: 'Ruou vang va bia (do uong co con) tiep khach' (450,000 VND)",DOC004@v1.0,DOC004@v1.0;DOC003@v1.0;DOC005@v1.0,1
 dense,CLM-007,ESCALATED,LATE_SUBMISSION,Submitted 12 days after returning; the limit is 10 days,DOC002@v2.0,DOC002@v2.0;DOC008@v1.0;DOC001@v1.0,1
-hybrid,CLM-002,ESCALATED,HOTEL_OVER_LIMIT,"Hotel 4,800,000 VND/night exceeds the 1,500,000 VND limit for Da Nang",DOC003@v1.0,DOC003@v1.0;DOC004@v1.0;DOC008@v1.0,1
+hybrid,CLM-002,ESCALATED,HOTEL_OVER_LIMIT,"Hotel 4,800,000 VND on 2026-09-15 exceeds the 1,500,000 VND nightly limit for Da Nang",DOC003@v1.0,DOC003@v1.0;DOC004@v1.0;DOC008@v1.0,1
+hybrid,CLM-002,ESCALATED,HOTEL_OVER_LIMIT,"Hotel 4,800,000 VND on 2026-09-16 exceeds the 1,500,000 VND nightly limit for Da Nang",DOC003@v1.0,DOC003@v1.0;DOC004@v1.0;DOC008@v1.0,1
 hybrid,CLM-003,NEED_MORE_INFO,MISSING_RECEIPT,"Receipt required for hotel 2,400,000 VND on 2026-09-20",DOC006@v1.0,DOC006@v1.0;DOC003@v1.0;DOC001@v1.0,1
 hybrid,CLM-004,ESCALATED,NO_HOTEL_POLICY,No hotel limit is defined for Singapore; a limit must not be invented,DOC008@v1.0,DOC008@v1.0;DOC003@v1.0;DOC007@v1.0,1
 hybrid,CLM-006,REJECTED,NOT_REIMBURSABLE,"Alcoholic beverages are not reimbursable: 'Ruou vang va bia (do uong co con) tiep khach' (450,000 VND)",DOC004@v1.0,DOC004@v1.0;DOC003@v1.0;DOC005@v1.0,1

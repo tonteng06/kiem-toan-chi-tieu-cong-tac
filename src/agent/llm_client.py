@@ -5,7 +5,7 @@ new dependency is needed. Configuration comes from the environment (never from c
 
     GROQ_API_KEY   required (LLM_API_KEY / OPENAI_API_KEY are accepted as fallbacks)
     LLM_BASE_URL   default https://api.groq.com/openai/v1
-    GROQ_MODEL     default llama-3.3-70b-versatile (LLM_MODEL also accepted)
+    GROQ_MODEL     default qwen/qwen3.8-27b (LLM_MODEL also accepted)
     LLM_TIMEOUT    seconds per request, default 30
     LLM_MAX_RETRIES  default 3 (attempts = 1 + retries)
 
@@ -60,7 +60,7 @@ class LLMError(Exception):
 class LLMConfig:
     api_key: str
     base_url: str = "https://api.groq.com/openai/v1"
-    model: str = "llama-3.3-70b-versatile"
+    model: str = "qwen/qwen3.8-27b"
     timeout: float = 30.0
     max_retries: int = 3
     temperature: float = 0.0

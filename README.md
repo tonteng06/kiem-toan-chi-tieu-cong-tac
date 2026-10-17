@@ -33,7 +33,7 @@ python scripts/demo_verified_audit.py
 |---|---|---|
 | `make setup` | `pip install -r requirements.txt` | Cài thư viện |
 | `make demo` | `python scripts/demo_verified_audit.py` | RAG + MCP + write + verify, không LLM |
-| `make eval` | `python -m evaluation.evaluate_retrieval` | Dense vs Hybrid trên `tests/testset.jsonl`, ghi `evaluation/results.csv`, `summary.csv` |
+| `make eval` | xem `Makefile` | Retrieval + claim grounding + real Agent metrics + real Correct Refusal |
 | `make test` | `python -m pytest -q` | Toàn bộ test |
 | `make smoke` | xem `Makefile` | Discovery, đọc, ghi/đọc lại qua stdio |
 | `make logs` | `python scripts/demo_verified_audit.py --three` | Tạo lại 3 log tích hợp (không LLM) |
@@ -94,7 +94,24 @@ Mỗi log ghi timestamp, các bước, tool args/kết quả và `usage` (calls,
 
 **Log tích hợp không gọi LLM:** `logs/run_01..03.jsonl` (ngày 16/10: retrieval MiniLM thật + MCP + ghi/đọc lại file thật, LLM usage = 0). Không dùng làm bằng chứng chất lượng Agent.
 
-**Cách tính chỉ số Agent:** Decision Accuracy, Correct Refusal Rate, Evidence Coverage và tổng token tính bằng `evaluation/agent_metrics.py` / `agent_eval_summary.py` từ log thật; số liệu cuối nằm trong `report.docx`. Faithfulness được chấm thủ công trên các hồ sơ đã chạy.
+**Chỉ số Agent cuối cùng:**
+
+| Metric | Kết quả |
+|---|---:|
+| Decision Accuracy | 100% (4/4 real claim cases) |
+| Evidence Coverage | 100% (3 evidence-scored cases) |
+| Verified writes | 4/4 |
+| Correct Refusal Rate | 100% (4/4 Q09–Q12) |
+| Dense Grounding@3 | 100% (6/6 issues) |
+| Hybrid Grounding@3 | 100% (6/6 issues) |
+
+`logs/agent_run_01.jsonl`: 21 LLM calls, 41.990 prompt token, 1.608 completion token, tổng 43.598 token.
+
+`logs/agent_run_04.jsonl`: 14 LLM calls, 37.093 prompt token, 780 completion token, tổng 37.873 token.
+
+`make eval` tái tạo Retrieval, Grounding, real claim-Agent metrics và Correct Refusal từ các log thật. Kết quả machine-readable nằm trong `evaluation/real_agent_summary.json` và `evaluation/no_answer_summary.json`.
+
+Faithfulness được kiểm tra thủ công trên 4 real claim outputs: 4/4 kết luận nghiệp vụ được evidence hỗ trợ; CLM-006 có một lỗi từ vựng nhỏ (`rice wine` thay vì `wine`) nhưng không ảnh hưởng quyết định. Không trình bày kết quả này như automated faithfulness score.
 
 ## 6. Hạn chế đã biết
 
@@ -112,7 +129,7 @@ src/rag/      loader, chunker, embeddings, dense, BM25, hybrid, retriever
 src/agent/    vòng lặp Agent, business rules, evidence gate, llm_client, prompts/
 src/mcp_server/  server, client, adapters, contracts
 scripts/      demo, smoke test
-evaluation/   evaluate_retrieval, agent_metrics, results.csv, summary.csv, failure_analysis.txt
+evaluation/   retrieval, grounding, Agent/refusal evaluators, summaries, failure analysis
 tests/        testset.jsonl và các test
 logs/         agent_run_*.jsonl (LLM thật), run_*.jsonl (tích hợp)
 progress/     nhật ký tiến độ từng thành viên theo ngày

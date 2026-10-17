@@ -36,7 +36,7 @@ def test_success_returns_text_and_usage():
     url, headers, payload, timeout = t.calls[0]
     assert url == "https://api.groq.com/openai/v1/chat/completions" and timeout == CFG.timeout
     assert headers["Authorization"] == "Bearer test-key"
-    assert payload["model"] == "llama-3.3-70b-versatile" and payload["temperature"] == 0.0
+    assert payload["model"] == "qwen/qwen3.8-27b" and payload["temperature"] == 0.0
     assert payload["response_format"] == {"type": "json_object"} and payload["messages"] == MSGS
 
 

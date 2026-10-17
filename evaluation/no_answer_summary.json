@@ -1,0 +1,53 @@
+{
+  "source_log": "logs/agent_run_04.jsonl",
+  "total_cases": 4,
+  "correct_refusals": 4,
+  "correct_refusal_rate": 1.0,
+  "total_llm_calls": 14,
+  "total_prompt_tokens": 37093,
+  "total_completion_tokens": 780,
+  "total_tokens": 37873,
+  "max_prompt_tokens": 4926,
+  "cases": [
+    {
+      "question_id": "Q09",
+      "decision": "NO_ANSWER",
+      "stopped_reason": "final",
+      "llm_calls": 4,
+      "evidence_refs": [
+        "DOC005@v1.0"
+      ],
+      "valid_refusal": true
+    },
+    {
+      "question_id": "Q10",
+      "decision": "NO_ANSWER",
+      "stopped_reason": "final",
+      "llm_calls": 4,
+      "evidence_refs": [],
+      "valid_refusal": true
+    },
+    {
+      "question_id": "Q11",
+      "decision": "NO_ANSWER",
+      "stopped_reason": "final",
+      "llm_calls": 3,
+      "evidence_refs": [
+        "DOC008@v1.0",
+        "DOC002@v2.0"
+      ],
+      "valid_refusal": true
+    },
+    {
+      "question_id": "Q12",
+      "decision": "NO_ANSWER",
+      "stopped_reason": "final",
+      "llm_calls": 3,
+      "evidence_refs": [
+        "DOC001@v1.0",
+        "DOC005@v1.0"
+      ],
+      "valid_refusal": true
+    }
+  ]
+}
