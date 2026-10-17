@@ -94,3 +94,31 @@ claim demos alone do not measure refusal or faithfulness.
 TV3 defense focus: explain dynamic discovery, schema normalization, stdio stdout
 discipline, actual JSON side effects, evidence gating and the mandatory separate
 read-back. Be able to change a tool contract and its validation/test directly.
+
+
+## Post-review acceptance — 18 October 2026
+
+This section supersedes the incomplete status above while preserving the
+17 October review as historical evidence.
+
+- Remote `main` was successfully fetched and merged on the submission Mac.
+- Full regression on merged `main`: **257 passed, 71 subtests passed**.
+- MCP stdio discovery passed with all five tools.
+- Registry smoke passed, including expected error observations.
+- Deterministic MCP write/read-back demo finished with `VERIFY SUCCESS` and
+  `disk_verified=true`.
+- Retrieval rerun: Dense Hit@3/Recall@3 = 100%/100%; Hybrid = 100%/95.45%.
+- Claim grounding: Dense and Hybrid = **6/6 issues grounded, 100% Grounding@3**.
+- Real claim-Agent evaluation from `logs/agent_run_01.jsonl`:
+  Decision Accuracy = **100% (4/4)**, Evidence Coverage = **100%**
+  on 3 evidence-scored cases, and 4/4 writes verified.
+- Real Correct Refusal evaluation from `logs/agent_run_04.jsonl`:
+  **100% (4/4)** for Q09-Q12.
+- Manual material-faithfulness review: 4/4 claim conclusions supported;
+  CLM-006 contains one minor lexical translation issue that does not affect
+  the decision.
+- `make eval` now reproduces retrieval, grounding, claim-Agent metrics and
+  Correct Refusal summaries.
+- Secret scan found no tracked Groq key after `.env.example` was cleaned.
+- `report.docx` remains the final submission artifact to assemble after these
+  measured results are frozen.

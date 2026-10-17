@@ -22,12 +22,16 @@ transport_smoke.jsonl is a separate, model-free transport/persistence check from
 `make smoke`, explicitly marked transport_integration. To reproduce that scope:
 `python scripts/demo_verified_audit.py --transport-only`.
 
-Actual LLM Agent logs still require TV2's provider. Never relabel these runs or
-invent token usage/final performance metrics from deterministic integration.
+Real LLM evidence is stored separately and must not be confused with the
+deterministic integration logs above.
 
-17 October: TV2's final provider implementation is merged locally. Run
-`python scripts/demo_agent_mcp.py CLM-001 --log logs/agent_run_01.jsonl` for real
-provider/manual-Agent/MCP output after exporting the key. The new runner records
-Agent trace, complete MCP history, discovered names, usage and disk verification.
-No such real provider run was possible in the review session; do not infer it
-from the runner's existence or from handler tests. See the final review checklist.
+- `agent_run_01.jsonl`: four unique real-provider claim audits
+  (CLM-001, CLM-002, CLM-003, CLM-006), all ending in a final decision with
+  `VERIFY SUCCESS`.
+- `agent_run_02.jsonl` and `agent_run_03.jsonl`: repeated real-provider runs for
+  reproducibility; they are not counted as independent evaluation cases.
+- `agent_run_04.jsonl`: real-provider evaluation of Q09-Q12, all four returning
+  final `NO_ANSWER`.
+
+Final metrics are reproduced by `make eval` and written to
+`evaluation/real_agent_summary.json` and `evaluation/no_answer_summary.json`.

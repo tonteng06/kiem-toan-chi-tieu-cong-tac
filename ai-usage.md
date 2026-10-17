@@ -35,7 +35,7 @@ Corpus policy và metadata; loader, chunking (size 500, overlap 100); embedding;
 - Load đủ 8 policy document, kiểm tra metadata, chunking, embedding 384 chiều.
 - Chạy Dense, BM25, Hybrid và Retriever hai chế độ; chạy testset 15 câu (4 câu `no_answer`).
 - Kết quả: Dense Hit@3/Recall@3 = 100%/100%; Hybrid = 100%/95,45%. Q13 của Hybrid thiếu DOC007 trong Top-3, được giữ lại làm failure case, không chỉnh để metric đẹp hơn.
-- Retrieval không chứng minh được Agent từ chối đúng (`no_answer`); phần đó cần output Agent thật.
+- Retrieval tự nó không chứng minh được Agent từ chối đúng. Final evaluation sử dụng real-provider `agent_run_04.jsonl` cho Q09-Q12 và đo Correct Refusal riêng.
 - Các Agent output dùng trong unit test của metrics là dữ liệu giả lập, chỉ để kiểm tra công thức, không dùng làm kết quả cuối.
 
 ---
@@ -52,10 +52,10 @@ Vòng lặp agent tự viết, evidence gate, business rules, `submit_decision` 
 | `src/agent/llm_client.py` | Hai thay đổi: thêm header `User-Agent` trong `urllib_transport`; chờ theo gợi ý "try again in Ns" khi gặp HTTP 429 (tối đa 60 giây) | Chạy toàn bộ test, rồi chạy agent thật |
 | Debug lần chạy thật đầu tiên | Chẩn đoán HTTP 403 (Cloudflare, mã 1010), 404 `model_not_found`, 400 với `openai/gpt-oss-120b`, 429 do giới hạn token/phút; gợi ý liệt kê model bằng `GET /models` và dùng `qwen/qwen3.8-27b` | Tự chạy mọi lệnh; danh sách model lấy từ key của tôi |
 | `progress/2026-10-17-tv2.md` | Soạn bản nháp kết quả chạy thật và blocker | Số liệu chép từ output terminal của các lần chạy tôi tự thực hiện |
-| Vòng lặp agent, evidence gate, `submit_decision` và các test | *(điền: phần nào do AI sinh bản nháp, phần nào tự viết, và đã sửa gì)* | Chạy `python -m pytest -q` và chạy agent thật |
+| Vòng lặp agent, evidence gate, `submit_decision` và các test | AI hỗ trợ bản nháp, giải thích và debug; code được rà soát và chỉnh sau khi chạy test | Chạy `python -m pytest -q` và các real-provider Agent runs |
 
 ### Prompt chính
-*(điền 4–6 prompt chính đã dùng với Claude, ví dụ prompt xây dựng vòng lặp agent, evidence gate, parse action, retry/429)*
+Repo không lưu nguyên văn toàn bộ prompt của Thành viên 2. Để tránh bịa nội dung, phần khai báo chỉ ghi các nhóm yêu cầu đã được xác nhận qua code/progress: xây vòng lặp Agent, evidence gate, parse JSON action, retry/HTTP 429 và debug model/provider.
 
 ### AI không làm
 AI không chạy các lệnh gọi LLM và không tạo ra log nào. Các file `logs/agent_run_01..04.jsonl` đến từ các lần chạy tôi tự thực hiện trên máy.
@@ -68,7 +68,7 @@ AI không chạy các lệnh gọi LLM và không tạo ra log nào. Các file `
 - Agent thật với `qwen/qwen3.8-27b` trên 4 hồ sơ mẫu (CLM-001, CLM-002, CLM-003, CLM-006): APPROVED, ESCALATED, NEED_MORE_INFO, REJECTED; cả 4 đều VERIFY SUCCESS (đọc lại bằng `get_claim_status`, trạng thái khớp).
 - Usage lần chạy 01: 21 lần gọi model, 41.990 prompt token, 1.608 completion token.
 - `agent_run_02` và `agent_run_03` chạy lại hồ sơ của run 01 và cho cùng số token (temperature=0), nên là lần lặp lại, không phải bằng chứng độc lập; `agent_run_02` chứa hai lần chạy giống hệt nhau của CLM-001 và CLM-006.
-- `agent_run_04`: chạy thật trên các câu `no_answer` Q09–Q12.
+- `agent_run_04`: chạy thật trên Q09–Q12; cả 4 kết thúc `NO_ANSWER`, Correct Refusal = 100% (4/4).
 
 ### Hạn chế
 - `qwen/qwen3.8-27b` là model preview; gói free giới hạn 7000 token đầu vào mỗi phút nên một lượt 4 hồ sơ mất khoảng 12 phút do chờ.
@@ -114,9 +114,9 @@ Danh sách này không có nghĩa toàn bộ file do AI tạo; các file có th�
 | Retrieval MiniLM thật (15 câu, 11 có đáp án) | Dense Hit@3/Recall@3 = 100%/100%; Hybrid = 100%/95,45%; Q13 Hybrid thiếu DOC007 |
 | Ghi và đọc lại qua MCP | Ba log 16/10 có retrieval, lưu trạng thái, xác minh file; LLM usage = 0 |
 | Test Agent/MCP | `APPROVED`, `ESCALATED`, `NEED_MORE_INFO`, `REJECTED` và chặn citation chưa truy xuất được kiểm tra bằng phản hồi giả lập, không dùng làm metric Agent cuối cùng |
-| Cold start trên máy sạch | *(điền kết quả sau khi chạy `pip install -r requirements.txt` trong venv mới)* |
+| Cài dependencies trên máy nộp | `python -m pip install -r requirements.txt` thành công trong venv đang dùng; chưa coi đây là phép thử fresh-venv độc lập |
 
-Retrieval tốt, test giả lập đạt hoặc log ghi file thành công chưa đủ để kết luận Agent trả lời đúng, từ chối đúng và trung thực với nguồn; điều đó cần output LLM thật.
+Final real-provider outputs hiện đã có. Evaluation cuối ghi nhận Decision Accuracy 100% (4/4), Evidence Coverage 100% trên 3 case có expected evidence, Correct Refusal 100% (4/4), và manual material-faithfulness 4/4 kết luận được hỗ trợ; faithfulness không được trình bày như metric tự động.
 
 ---
 
@@ -124,6 +124,4 @@ Retrieval tốt, test giả lập đạt hoặc log ghi file thành công chưa 
 
 Mỗi thành viên xác nhận: đã dùng AI như khai báo ở phần của mình, đã chạy và kiểm tra các phần code có AI hỗ trợ, và có thể giải thích, sửa trực tiếp phần mình phụ trách khi bảo vệ.
 
-- Thành viên 1: *(ký tên / viết 1–2 câu của riêng bạn)*
-- Thành viên 2: *(ký tên / viết 1–2 câu của riêng bạn)*
-- Thành viên 3: *(ký tên / viết 1–2 câu của riêng bạn)*
+Nếu môn học yêu cầu chữ ký/xác nhận cá nhân, từng thành viên tự bổ sung vào bản nộp cuối.
