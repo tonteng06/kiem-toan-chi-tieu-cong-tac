@@ -1,0 +1,53 @@
+FINAL EVALUATION - TV1
+Date: 2026-10-17
+
+1. Member 1 evaluation tests
+- 32 passed in 0.07s.
+- Scope: Agent evaluation contract, per-case metrics, aggregate evaluation summary.
+
+2. Retrieval evaluation
+- Testset: 15 questions.
+- Answerable questions: 11.
+- No-answer questions: 4.
+
+Dense:
+- Hit@3 = 100.00%.
+- Recall@3 = 100.00%.
+
+Hybrid:
+- Hit@3 = 100.00%.
+- Recall@3 = 95.45%.
+
+3. Known retrieval failure
+- Q13 expected DOC003 and DOC007.
+- Hybrid Top-3 returned DOC003, DOC008 and DOC004.
+- Q13 recall = 0.5.
+- The final weights and chunking were not changed only to optimize this test case.
+
+4. Claim-to-policy grounding
+- Dense: 5/5 grounded issues = 100.00% Grounding@3.
+- Hybrid: 5/5 grounded issues = 100.00% Grounding@3.
+- Grounding@3 is an evidence compatibility metric and must not be interpreted as LLM faithfulness.
+
+5. No-answer interpretation
+- Retrieval still returns nearest documents for no-answer questions.
+- Therefore retrieval results alone do not determine refusal.
+- Correct refusal must be evaluated from the Agent final decision.
+
+6. Agent-level evaluation status
+- Decision Accuracy implementation is ready.
+- Correct Refusal implementation is ready.
+- Evidence Coverage implementation is ready.
+- Usage aggregation implementation is ready.
+- Final real Agent metrics are not reported without real integrated Agent outputs.
+- Deterministic MCP runs or mocked outputs are not treated as real LLM Agent performance.
+
+7. Integration blocker found during final regression
+- Full pytest currently fails during test collection.
+- tests/test_agent.py expects the previous manual Agent API including MAX_STEPS, run_agent, parse_action and RegistryToolbox.
+- The Oct 16 src/agent/agent.py implementation no longer exposes the same API.
+- TV1 did not modify TV2 Agent ownership to hide this integration problem.
+
+Conclusion:
+- TV1 Data/RAG/Evaluation results are reproducible and ready.
+- Final team regression still requires Agent/MCP integration fixes.
