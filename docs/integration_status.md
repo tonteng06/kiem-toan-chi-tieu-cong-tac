@@ -90,3 +90,19 @@ Actual make eval passed: Dense Hit@3/Recall@3 100%/100%; Hybrid 100%/95.45%.
 Full test checkpoint: 218 passed, 71 subtests passed. Real provider/Agent evaluation
 and written owner acceptance remain pending; existing historical notes above are
 checkpoints, not claims that these newer requirements are complete.
+
+## Final-day update — 2026-10-17
+
+The final TV2 branch (5696422) was merged locally as 31b27df. TV3 implementation
+1d8ca46 connects its real provider/manual loop to dynamically discovered MCP
+tools, preserving the evidence_refs write contract. A boundary gate checks that
+all submitted refs were actually retrieved with text. Five new handler/boundary
+regressions pass. No owner-confirmation date is inferred or invented.
+
+Measured selection: 236 tests + 71 subtests passed, 21 host-loopback-dependent
+checks excluded. Actual retrieval eval again measured Dense 100%/100% and Hybrid
+100%/95.45% Hit@3/Recall@3. Full suite, fresh stdio, cold-start installation and
+real provider runs are not certified in this host. report.docx and final Agent
+quality/usage metrics remain absent. See docs/final-review-2026-10-17.md and
+evaluation/day7_validation.json. This update supersedes earlier pending-code
+statements but does not replace missing acceptance evidence.

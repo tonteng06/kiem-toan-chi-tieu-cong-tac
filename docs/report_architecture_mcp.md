@@ -32,6 +32,13 @@ they are not real LLM evaluation data. Final Agent metrics and measured token us
 must come from TV2 provider runs evaluated by TV1. The existing real Dense/Hybrid
 retrieval evaluator is invoked directly by make eval.
 
-Limitations: the current file store has no multi-process locking, and the final
-LLM provider and mandatory Agent write/read-back orchestration remain TV2 work.
-No claim about final Agent performance follows from passing transport tests.
+The final TV2 Agent/provider branch was merged locally on 17 October. The added
+demo_agent_mcp runner supplies the runtime-discovered MCP schemas to that Agent,
+requires every submitted evidence reference to have been retrieved with text,
+and checks the isolated JSON state after the Agent's mandatory status read-back.
+
+Limitations: the current file store has no multi-process locking. Real provider
+traces and final Agent quality/usage measurements remain pending because no key
+is configured in the review session; fresh stdio acceptance is also blocked by
+the review host's Windows loopback restriction. No claim about final Agent
+performance follows from passing handler tests or earlier deterministic runs.

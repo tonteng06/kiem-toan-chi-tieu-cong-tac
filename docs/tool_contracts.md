@@ -161,7 +161,7 @@ weights, and verifies the persisted claim file's hash is unchanged.
 ## `submit_decision`
 
 Purpose: persist an allowed agent decision to the claim state store. This tool
-will be implemented with a real state change and followed immediately by
+is implemented with a real state change and must be followed immediately by
 `get_claim_status` to verify it.
 
 Input: `claim_id`, `decision`, `reason`, and `evidence_refs` (document IDs with
@@ -189,8 +189,8 @@ again and compare the actual status with the expected status.
 ## Agreed merge handoff
 
 - Shared names: `search_policy`, `calculate_claim`, `get_claim_status`, `get_claim`,
-  `submit_decision`. The current MCP server exposes the four read tools;
-  the write action and write/read-back verification remain Day 5 work.
+  `submit_decision`. The current MCP server exposes all five tools;
+  the write action and isolated write/read-back demo are implemented.
 - Persistable decisions are exactly `APPROVED`, `REJECTED`, `ESCALATED`,
   `NEED_MORE_INFO`. `NO_ANSWER` is an Agent response and is never persisted.
 - Evidence references are strings such as `DOC003@v1.0`.
@@ -222,3 +222,15 @@ The demo configures `AIPR_STATE_PATH` only in its child process, using a tempora
 of the tracked claims. Production/default behavior still uses the configured store.
 One stdio server serializes writes; multiple independent server processes must not
 share a JSON state file because StateStore does not implement multi-process locking.
+
+## 17 October real Agent integration
+
+TV2's final branch is merged locally. `scripts/demo_agent_mcp.py` wires its real
+provider/manual Agent to McpToolbox. The MCP write still requires evidence_refs,
+unlike the local registry's three-argument write. Use runtime-discovered schemas;
+do not remove the MCP evidence check to match the local interface.
+The runner's boundary gate additionally requires every submitted reference to
+have appeared with nonempty text in this run's search results. The Agent performs
+the immediate status read-back, and the runner checks the isolated saved file.
+Real provider/stdin-stdout acceptance remains unverified in the restricted host;
+see docs/final-review-2026-10-17.md for exact results and remaining checks.

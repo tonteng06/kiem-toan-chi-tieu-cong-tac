@@ -311,3 +311,29 @@ implementing the missing MCP write boundary using the existing TV2 StateStore an
 adding isolated write/read-back demo logging, regression tests, Makefile and setup docs.
 No LLM provider was invented. Deterministic integration runs record zero LLM usage and
 are explicitly excluded from final Agent evaluation. Human review/defense remains needed.
+
+## TV3 final-day review — 2026-10-17
+
+At the user's request, Codex read the final-day assignment and official requirements,
+reviewed integration code, and merged the already-fetched TV2 final branch while
+preserving its commits/authorship. Main prompt: analyze the supplied files and
+perform the 17 October task, using the group GitHub when necessary.
+
+AI-generated/edited material in this pass: scripts/demo_agent_mcp.py,
+tests/test_agent_mcp_contract.py, README.md, Makefile, .env.example, final review,
+TV3 progress and validation JSON, plus MCP/architecture handoff updates.
+The runner connects the existing real provider/manual Agent to dynamic MCP tools;
+its additional boundary gate rejects citations not actually retrieved in that run.
+No provider key, synthetic final answer, fabricated metric or student review
+confirmation was supplied by AI.
+
+Codex measured 236 passing tests and 71 passing subtests in a host-compatible
+selection; 21 event-loop/transport checks were excluded from that invocation and
+are NOT claimed as passed. A real cached MiniLM evaluation rerun reproduced
+Dense 100%/100% and Hybrid 100%/95.45% Hit@3/Recall@3. Existing three deterministic
+integration logs retain zero LLM usage. There is no new real provider run.
+
+Cold-start copy and venv creation succeeded, but installing MCP failed in the
+available package index. Full pytest/stdin-stdout acceptance, actual provider
+outputs, report assembly and remote review remain necessary. These are automated
+checks and code assistance; the student must understand and defend the changes.

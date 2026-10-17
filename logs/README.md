@@ -24,3 +24,10 @@ transport_smoke.jsonl is a separate, model-free transport/persistence check from
 
 Actual LLM Agent logs still require TV2's provider. Never relabel these runs or
 invent token usage/final performance metrics from deterministic integration.
+
+17 October: TV2's final provider implementation is merged locally. Run
+`python scripts/demo_agent_mcp.py CLM-001 --log logs/agent_run_01.jsonl` for real
+provider/manual-Agent/MCP output after exporting the key. The new runner records
+Agent trace, complete MCP history, discovered names, usage and disk verification.
+No such real provider run was possible in the review session; do not infer it
+from the runner's existence or from handler tests. See the final review checklist.

@@ -1,0 +1,91 @@
+{
+  "reviewed_at": "2026-10-17T11:16:05.003610+00:00",
+  "branch": "member3-mcp",
+  "testset_count": 15,
+  "no_answer_count": 4,
+  "git_present": true,
+  "report_docx_present": false,
+  "tracked_secret_files": [],
+  "credential_pattern_matches": [],
+  "claim_fixture_sha256": "818648be468791599b557b9ab51e7091b147eff7f58c3c5504e5c297e42c2cf4",
+  "logs": [
+    {
+      "path": "logs/run_01.jsonl",
+      "timestamp": "2026-10-16T13:23:21.469202+00:00",
+      "decision": "APPROVED",
+      "run_kind": "retrieval_deterministic_integration",
+      "llm_used": false,
+      "usage": {
+        "calls": 0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "max_prompt": 0
+      },
+      "disk_verified": true,
+      "immediate_readback": true
+    },
+    {
+      "path": "logs/run_02.jsonl",
+      "timestamp": "2026-10-16T13:23:28.771239+00:00",
+      "decision": "ESCALATED",
+      "run_kind": "retrieval_deterministic_integration",
+      "llm_used": false,
+      "usage": {
+        "calls": 0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "max_prompt": 0
+      },
+      "disk_verified": true,
+      "immediate_readback": true
+    },
+    {
+      "path": "logs/run_03.jsonl",
+      "timestamp": "2026-10-16T13:23:36.386336+00:00",
+      "decision": "NEED_MORE_INFO",
+      "run_kind": "retrieval_deterministic_integration",
+      "llm_used": false,
+      "usage": {
+        "calls": 0,
+        "prompt_tokens": 0,
+        "completion_tokens": 0,
+        "max_prompt": 0
+      },
+      "disk_verified": true,
+      "immediate_readback": true
+    }
+  ],
+  "regression": {
+    "passed": 236,
+    "subtests_passed": 71,
+    "deselected": 21,
+    "full_suite_passed": false,
+    "command": "python -m pytest -q -k 'not toolbox and not real_server and not async_client and not failed_start and not actual_stdio and not client_forwards and not real_sdk_registry_pipeline and not real_stdio'",
+    "note": "TEMP and TMP set to the writable user Temp directory. Exclusions are host-loopback-dependent tests; they are not disabled in repository code."
+  },
+  "retrieval_rerun": {
+    "success": true,
+    "command": "HF_HUB_OFFLINE=1 python -m evaluation.evaluate_retrieval",
+    "dense_hit_at_3": 1.0,
+    "dense_recall_at_3": 1.0,
+    "hybrid_hit_at_3": 1.0,
+    "hybrid_recall_at_3": 0.9545454545454546,
+    "answerable_questions": 11,
+    "known_failure": "Hybrid Q13 misses DOC007; per-case recall 0.5"
+  },
+  "cold_start": {
+    "tracked_file_copy": true,
+    "new_venv_created": true,
+    "dependency_install_succeeded": false,
+    "error": "No matching distribution found for mcp<3,>=2 in the package index accessible from this review environment."
+  },
+  "runtime_limits": {
+    "asyncio_minimal_probe": "asyncio.run(asyncio.sleep(0)) times out in socket._fallback_socketpair/accept",
+    "github_fetch": "getaddrinfo() thread failed to start",
+    "computer": "failed to launch codex app-server: program not found",
+    "real_provider_configured": false
+  },
+  "submission_ready": false,
+  "review_base_head": "31b27df73c5c8fd1e4419d1199e54830523ee7a1",
+  "implementation_commit": "1d8ca46e4e6534a931bf2300e99c68c65a1dc167"
+}
