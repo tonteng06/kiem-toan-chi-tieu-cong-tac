@@ -82,5 +82,5 @@ def test_tool_bug_does_not_crash_the_run(registry):
 
 def test_schemas_describe_every_tool(registry):
     schemas = {s["name"]: s for s in registry.schemas()}
-    assert set(schemas) == {"get_claim", "get_claim_status", "calculate_claim"}
+    assert set(schemas) == {"get_claim", "get_claim_status", "calculate_claim", "submit_decision"}
     assert schemas["calculate_claim"]["input_schema"]["required"] == ["claim_id"]

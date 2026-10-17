@@ -10,10 +10,12 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from src.agent import business_rules
-from src.agent.state_store import StateStore
+from src.agent.state_store import StateStore, StateStoreError
+from src.models.claim import ClaimStatus
 
 JSON_TYPES = {str: "string", int: "integer", bool: "boolean"}
 POLICY_MODES = ("dense", "hybrid")
+PERSISTABLE_DECISIONS = ("APPROVED", "REJECTED", "ESCALATED", "NEED_MORE_INFO")  # NO_ANSWER is never written
 
 
 @dataclass(frozen=True)
@@ -22,7 +24,7 @@ class Tool:
     description: str
     params: dict[str, type]  # argument name -> expected type; required unless in `defaults`
     func: Callable[..., Any]
-    writes: bool = False  # True for tools with a side effect (submit_decision, Day 5)
+    writes: bool = False  # True for tools with a side effect (submit_decision)
     defaults: dict[str, Any] = field(default_factory=dict)  # optional arguments and their defaults
 
     def schema(self) -> dict:
@@ -61,7 +63,7 @@ class ToolRegistry:
 
 
 def build_registry(store: StateStore | None = None, retriever: Any | None = None) -> ToolRegistry:
-    """Registry with the read tools. submit_decision (write) is added on Day 5.
+    """Registry with the read tools plus the write tool `submit_decision`.
 
     `retriever` is Member 1's `Retriever` (anything with `.retrieve(query, mode, top_k)`).
     Without it, `search_policy` is simply not registered.
@@ -103,6 +105,14 @@ def build_registry(store: StateStore | None = None, retriever: Any | None = None
             })
         return {"results": results}
 
+    def submit_decision(claim_id: str, decision: str, reason: str) -> dict:
+        """The one write tool: persist a decision. Callers must read the status back to verify."""
+        if decision not in PERSISTABLE_DECISIONS:
+            raise StateStoreError(f"decision must be one of {list(PERSISTABLE_DECISIONS)}, got {decision!r}")
+        claim = store.update_status(claim_id, ClaimStatus(decision), reason)  # checks the transition table
+        return {"claim_id": claim.claim_id, "decision": decision, "status": claim.status.value,
+                "updated_at": claim.updated_at}
+
     registry = ToolRegistry()
     if retriever is not None:
         registry.register(Tool(
@@ -120,4 +130,10 @@ def build_registry(store: StateStore | None = None, retriever: Any | None = None
              {"claim_id": str}, calculate_claim),
     ):
         registry.register(tool)
+    registry.register(Tool(
+        "submit_decision",
+        "WRITE: persist the final decision for a claim (APPROVED, REJECTED, ESCALATED or NEED_MORE_INFO). "
+        "Only allowed after calculate_claim and enough policy evidence; the status is read back afterwards.",
+        {"claim_id": str, "decision": str, "reason": str}, submit_decision, writes=True,
+    ))
     return registry
