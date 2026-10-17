@@ -1,6 +1,6 @@
 PYTHON ?= python
 
-.PHONY: setup test smoke demo logs eval
+.PHONY: setup test smoke demo logs eval agent-demo
 setup:
 	$(PYTHON) -m pip install -r requirements.txt
 test:
@@ -15,3 +15,5 @@ logs:
 	$(PYTHON) scripts/demo_verified_audit.py --three
 eval:
 	$(PYTHON) -m evaluation.evaluate_retrieval
+agent-demo:
+	$(PYTHON) scripts/demo_agent_mcp.py
