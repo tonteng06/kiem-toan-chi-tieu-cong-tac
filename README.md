@@ -59,7 +59,7 @@ Linux / macOS: `set -a; . ./.env; set +a` rồi chạy cùng lệnh Python.
 `.env.example` liệt kê các biến (key, model, endpoint, timeout, retry). Model dùng cho các log thật: `qwen/qwen3.8-27b` (Groq, bản preview). Gói free giới hạn khoảng 7000 token đầu vào mỗi phút, nên chạy từng hồ sơ một và chấp nhận thời gian chờ.
 
 - `scripts/demo_agent_mcp.py`: Agent (vòng lặp tự viết) → `McpToolbox` → MCP server qua stdio. Schema tool lấy từ `tools/list` lúc chạy. Hợp đồng `submit_decision(claim_id, decision, reason, evidence_refs)`; model phải tự truy xuất và truyền đúng `evidence_refs` (dạng `DOC003@v1.0`), hệ thống không tự bịa evidence. Thiếu key, lỗi provider hoặc verify thất bại → exit code khác 0, không có mock fallback.
-- `scripts/demo_agent.py`: runner thay thế dùng registry cục bộ (không đi qua MCP transport). Các log `agent_run_*` bên dưới do runner này tạo.
+- `scripts/demo_agent.py`: runner thay thế dùng registry cục bộ (không đi qua MCP transport). Các log `agent_run_01..03` bên dưới do runner này tạo; `agent_run_04` do `scripts/demo_agent_questions.py` tạo.
 - Giới hạn bước: module Agent mặc định `MAX_STEPS = 8`; runner MCP cho phép 16 (cấu hình tối đa 32).
 
 ## 4. MCP server
@@ -88,7 +88,7 @@ Q13 ở chế độ Hybrid không đưa DOC007 vào Top-3; phân tích trong `ev
 |---|---|
 | `logs/agent_run_01.jsonl` | 4 hồ sơ CLM-001, 002, 003, 006 → APPROVED, ESCALATED, NEED_MORE_INFO, REJECTED; cả 4 verify thành công. Tổng usage: 21 lần gọi, 41.990 prompt token, 1.608 completion token |
 | `logs/agent_run_02.jsonl`, `agent_run_03.jsonl` | Chạy lại các hồ sơ của run 01 (temperature=0), không phải bằng chứng độc lập |
-| `logs/agent_run_04.jsonl` | Chạy thật trên 4 câu `no_answer` Q09–Q12 (kết quả `NO_ANSWER`) |
+| `logs/agent_run_04.jsonl` | Chạy thật trên 4 câu `no_answer` Q09–Q12 (`scripts/demo_agent_questions.py`): cả 4 ra `NO_ANSWER`, không ghi hồ sơ; 14 lần gọi, 37.093 prompt token, 780 completion token |
 
 Mỗi log ghi timestamp, các bước, tool args/kết quả và `usage` (calls, prompt_tokens, completion_tokens, max_prompt).
 
@@ -102,7 +102,7 @@ Mỗi log ghi timestamp, các bước, tool args/kết quả và `usage` (calls,
 - `qwen/qwen3.8-27b` là model preview của Groq, có thể bị ngừng bất ngờ; gói free giới hạn token/phút nên một lượt 4 hồ sơ mất khoảng 12 phút.
 - Các tình huống `MAX_STEPS` và output LLM sai định dạng được kiểm tra bằng unit test với model giả lập, chưa có lần chạy thật.
 - Trạng thái claim là một file JSON dành cho **một writer**; nhiều server không được dùng chung một file state.
-- Log LLM thật hiện có do runner cục bộ (`demo_agent.py`) tạo; đường Agent → MCP bằng LLM thật chạy bằng `demo_agent_mcp.py` (xem mục 3).
+- Log LLM thật hiện có gọi tool qua registry cục bộ (`demo_agent.py`, `demo_agent_questions.py`); đường Agent → MCP bằng LLM thật chạy bằng `demo_agent_mcp.py` (xem mục 3).
 
 ## 7. Cấu trúc
 

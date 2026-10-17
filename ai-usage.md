@@ -43,37 +43,44 @@ Corpus policy và metadata; loader, chunking (size 500, overlap 100); embedding;
 ## Thành viên 2 — Agent + Business logic + LLM (Claude)
 
 ### Phần phụ trách
-Vòng lặp agent tự viết, evidence gate, business rules, `submit_decision` rồi đọc lại để verify, `call_llm` (retry, timeout, ghi log lỗi HTTP), prompt tách file (`src/agent/prompts/agent_system.txt`), log usage.
+Agent + Business Logic + LLM: vòng lặp agent, evidence gate, ghi quyết định bằng `submit_decision` rồi đọc lại để verify, `call_llm` (retry, timeout, ghi log lỗi HTTP), prompt tách file (`src/agent/prompts/agent_system.txt`) và log usage. Model chạy agent thật trong các log là `qwen/qwen3.8-27b` trên Groq (một model preview).
 
-### AI hỗ trợ
+### AI đã hỗ trợ những gì
 | Công việc | AI làm gì | Tôi làm và kiểm tra thế nào |
 |---|---|---|
-| `scripts/demo_agent.py` | Viết bản nháp: đọc `.env`, chạy mỗi hồ sơ trên bản sao tạm của `claims.json` | Tự chạy; kiểm tra `git status` không liệt kê `.env` |
-| `src/agent/llm_client.py` | Hai thay đổi: thêm header `User-Agent` trong `urllib_transport`; chờ theo gợi ý "try again in Ns" khi gặp HTTP 429 (tối đa 60 giây) | Chạy toàn bộ test, rồi chạy agent thật |
-| Debug lần chạy thật đầu tiên | Chẩn đoán HTTP 403 (Cloudflare, mã 1010), 404 `model_not_found`, 400 với `openai/gpt-oss-120b`, 429 do giới hạn token/phút; gợi ý liệt kê model bằng `GET /models` và dùng `qwen/qwen3.8-27b` | Tự chạy mọi lệnh; danh sách model lấy từ key của tôi |
-| `progress/2026-10-17-tv2.md` | Soạn bản nháp kết quả chạy thật và blocker | Số liệu chép từ output terminal của các lần chạy tôi tự thực hiện |
-| Vòng lặp agent, evidence gate, `submit_decision` và các test | *(điền: phần nào do AI sinh bản nháp, phần nào tự viết, và đã sửa gì)* | Chạy `python -m pytest -q` và chạy agent thật |
+| Script chạy thật `scripts/demo_agent.py` | Viết bản nháp, gồm phần đọc `.env` và chạy mỗi hồ sơ trên một bản sao tạm của `claims.json` | Tự chạy; kiểm tra `git status` không bao giờ liệt kê `.env` |
+| Script `scripts/demo_agent_questions.py` | Viết script chạy agent thật với câu hỏi lấy từ `tests/testset.jsonl` | Tự tạo file, chạy trên Q09 đến Q12 và đọc câu trả lời trong log |
+| Sửa `src/agent/llm_client.py` | Hai thay đổi: thêm header `User-Agent` trong `urllib_transport`, và chờ theo gợi ý "try again in Ns" của server khi gặp HTTP 429 (tối đa 60 giây) | Chạy toàn bộ test, rồi chạy agent thật |
+| Debug lần chạy thật đầu tiên | Chẩn đoán lỗi HTTP 403 (Cloudflare, mã 1010), 404 `model_not_found`, 400 với `openai/gpt-oss-120b`, 429 do giới hạn token mỗi phút; gợi ý liệt kê model bằng `GET /models` và dùng `qwen/qwen3.8-27b` | Tự chạy mọi lệnh trên máy; danh sách model lấy từ key của tôi |
+| Ghi chú `progress/2026-10-17-tv2.md` | Soạn bản nháp kết quả chạy thật và các blocker | Số liệu chép từ output terminal các lần chạy của tôi |
+| Vòng lặp agent, evidence gate, `submit_decision` và các test | AI viết bản nháp đầu của các module này và các test; tôi đọc code, chạy test và chạy agent thật. Phần tôi trực tiếp làm: chọn model chạy thật bằng cách liệt kê các model mà key của tôi truy cập được rồi cấu hình `GROQ_MODEL` và `LLM_MAX_RETRIES` trong `.env`; áp dụng các bản sửa `llm_client.py` và chạy lại toàn bộ test sau mỗi thay đổi; đọc câu trả lời trong log no_answer để xác nhận agent từ chối mà không bịa con số. | Chạy `python -m pytest -q` (257 passed, 71 subtests passed trên `main` sau khi merge); chạy agent thật trên 4 hồ sơ và 4 câu no_answer |
 
 ### Prompt chính
-*(điền 4–6 prompt chính đã dùng với Claude, ví dụ prompt xây dựng vòng lặp agent, evidence gate, parse action, retry/429)*
+- Sửa lỗi lần chạy thật đầu tiên (HTTP 403 Cloudflare, 404 model, 400 gpt-oss, 429 giới hạn token).
+- Viết script chạy agent thật với câu hỏi từ bộ test để kiểm tra NO_ANSWER.
+- Soạn ghi chú tiến độ, phần Agent & Tool của report và phần khai báo này từ output chạy thật.
 
-### AI không làm
-AI không chạy các lệnh gọi LLM và không tạo ra log nào. Các file `logs/agent_run_01..04.jsonl` đến từ các lần chạy tôi tự thực hiện trên máy.
+### File do AI sinh hoặc sửa
+`scripts/demo_agent.py`, `scripts/demo_agent_questions.py`, `src/agent/llm_client.py` (hai thay đổi nêu ở bảng trên), `progress/2026-10-17-tv2.md` và mục này trong `ai-usage.md`.
+
+### Phần AI không làm
+AI không chạy các lệnh gọi LLM và không tạo ra log nào. Cả bốn file log (`logs/agent_run_01.jsonl` đến `logs/agent_run_04.jsonl`) đến từ các lần chạy tôi tự thực hiện trên máy. Các số liệu trong report lấy từ những log này.
 
 ### Những chỗ AI gợi ý chưa đúng
-- Ban đầu AI gợi ý `llama-3.3-70b-versatile`, nhưng key Groq của tôi không truy cập được (HTTP 404). Tôi kiểm tra bằng `GET /models` và chuyển sang model mà key dùng được.
+- Ban đầu AI gợi ý `llama-3.3-70b-versatile`, nhưng key Groq của tôi không truy cập được (HTTP 404). Tôi kiểm tra bằng `GET /models` và chuyển sang model mà key của tôi dùng được.
 - Sau đó AI gợi ý `openai/gpt-oss-120b`, nhưng model này lỗi HTTP 400 vì cơ chế gọi công cụ riêng của nó xung đột với giao thức JSON-action trong prompt của agent. Không dùng model này.
 
-### Đã tự chạy và kiểm tra
-- Agent thật với `qwen/qwen3.8-27b` trên 4 hồ sơ mẫu (CLM-001, CLM-002, CLM-003, CLM-006): APPROVED, ESCALATED, NEED_MORE_INFO, REJECTED; cả 4 đều VERIFY SUCCESS (đọc lại bằng `get_claim_status`, trạng thái khớp).
-- Usage lần chạy 01: 21 lần gọi model, 41.990 prompt token, 1.608 completion token.
-- `agent_run_02` và `agent_run_03` chạy lại hồ sơ của run 01 và cho cùng số token (temperature=0), nên là lần lặp lại, không phải bằng chứng độc lập; `agent_run_02` chứa hai lần chạy giống hệt nhau của CLM-001 và CLM-006.
-- `agent_run_04`: chạy thật trên các câu `no_answer` Q09–Q12.
+### Những gì tôi đã tự kiểm tra
+- Chạy `python -m pytest -q` trên `main` sau khi merge: 257 passed, 71 subtests passed.
+- Chạy agent thật với `qwen/qwen3.8-27b` trên 4 hồ sơ mẫu (CLM-001, CLM-002, CLM-003, CLM-006): APPROVED, ESCALATED, NEED_MORE_INFO, REJECTED; cả 4 đều `VERIFY SUCCESS` (đọc lại bằng `get_claim_status` thấy trạng thái khớp). Usage lần chạy 01: 21 lần gọi model, 41990 prompt token, 1608 completion token.
+- Chạy agent thật trên 4 câu no_answer Q09 đến Q12 (`logs/agent_run_04.jsonl`): cả 4 ra `NO_ANSWER`, không ghi hồ sơ; 14 lần gọi model, 37093 prompt token, 780 completion token.
+- Log 02 và 03 chạy lại các hồ sơ của log 01 và cho cùng số token vì `temperature=0`, nên đó là lần lặp lại, không phải bằng chứng độc lập. `logs/agent_run_02.jsonl` chứa hai lần chạy giống hệt nhau của CLM-001 và CLM-006, cả hai đều thành công.
 
-### Hạn chế
-- `qwen/qwen3.8-27b` là model preview; gói free giới hạn 7000 token đầu vào mỗi phút nên một lượt 4 hồ sơ mất khoảng 12 phút do chờ.
-- `VERIFY SUCCESS` chỉ cho biết trạng thái ghi và đọc lại khớp nhau; quyết định đúng hay sai được đo riêng bằng Decision Accuracy.
-- Các tình huống output sai định dạng và `MAX_STEPS` hiện kiểm tra bằng unit test với model giả lập, chưa có lần chạy thật.
+### Hạn chế cần nói rõ
+- `qwen/qwen3.8-27b` là model preview, Groq có thể ngừng bất ngờ. Gói free giới hạn 7000 token đầu vào mỗi phút nên một lần chạy 4 hồ sơ mất khoảng 12 phút do chờ.
+- `VERIFY SUCCESS` chỉ cho biết trạng thái đã ghi và đọc lại khớp nhau. Việc quyết định có đúng hay không được đo riêng bởi Thành viên 1 từ các log này.
+- Các log `agent_run_01` đến `04` gọi công cụ trực tiếp qua `RegistryToolbox`, chưa chạy agent thật qua MCP bằng `scripts/demo_agent_mcp.py`.
+- Output sai định dạng và `MAX_STEPS` mới chỉ được kiểm tra bằng unit test với model giả lập. `NO_ANSWER` đã có lần chạy thật nhưng chỉ một lần trên bốn câu.
 
 ---
 
@@ -125,5 +132,5 @@ Retrieval tốt, test giả lập đạt hoặc log ghi file thành công chưa 
 Mỗi thành viên xác nhận: đã dùng AI như khai báo ở phần của mình, đã chạy và kiểm tra các phần code có AI hỗ trợ, và có thể giải thích, sửa trực tiếp phần mình phụ trách khi bảo vệ.
 
 - Thành viên 1: *(ký tên / viết 1–2 câu của riêng bạn)*
-- Thành viên 2: *(ký tên / viết 1–2 câu của riêng bạn)*
+- Thành viên 2: Tôi đã tự chạy và kiểm tra các phần code được AI hỗ trợ ở trên, và có thể giải thích hoặc sửa trực tiếp phần Agent trong buổi bảo vệ.
 - Thành viên 3: *(ký tên / viết 1–2 câu của riêng bạn)*
