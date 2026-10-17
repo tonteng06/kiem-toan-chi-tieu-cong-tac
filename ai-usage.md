@@ -264,7 +264,7 @@ Agent + Business Logic + LLM: vòng lặp agent, evidence gate, ghi quyết đ�
 | Sửa `src/agent/llm_client.py` | Hai thay đổi: thêm header `User-Agent` trong `urllib_transport`, và chờ theo gợi ý "try again in Ns" của server khi gặp HTTP 429 (tối đa 60 giây) | Chạy toàn bộ test, rồi chạy agent thật |
 | Debug lần chạy thật đầu tiên | Chẩn đoán lỗi HTTP 403 (Cloudflare, mã 1010), 404 `model_not_found`, 400 với `openai/gpt-oss-120b`, 429 do giới hạn token mỗi phút; gợi ý liệt kê model bằng `GET /models` và dùng `qwen/qwen3.8-27b` | Tự chạy mọi lệnh trên máy; danh sách model lấy từ key của tôi |
 | Ghi chú `progress/2026-10-17-tv2.md` | Soạn bản nháp kết quả chạy thật và các blocker | Số liệu chép từ output terminal các lần chạy của tôi |
-| Vòng lặp agent, evidence gate, `submit_decision` và các test | CHỌN_CÂU_A_B_HOẶC_C | Chạy `python -m pytest -q` (257 passed, 71 subtests passed trên `main` sau khi merge); chạy agent thật trên 4 hồ sơ và 4 câu no_answer |
+| Vòng lặp agent, evidence gate, `submit_decision` và các test | AI viết bản nháp đầu của các module này và các test; tôi đọc code, chạy test và chạy agent thật. Phần tôi trực tiếp làm: chọn model chạy thật bằng cách liệt kê các model mà key của tôi truy cập được rồi cấu hình `GROQ_MODEL` và `LLM_MAX_RETRIES` trong `.env`; áp dụng các bản sửa `llm_client.py` và chạy lại toàn bộ test sau mỗi thay đổi; đọc câu trả lời trong log no_answer để xác nhận agent từ chối mà không bịa con số. | Chạy `python -m pytest -q` (257 passed, 71 subtests passed trên `main` sau khi merge); chạy agent thật trên 4 hồ sơ và 4 câu no_answer |
 
 ## Prompt chính
 
